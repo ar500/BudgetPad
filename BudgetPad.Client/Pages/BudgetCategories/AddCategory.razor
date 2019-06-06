@@ -1,0 +1,34 @@
+﻿@page "/addcategory"
+@using BudgetPad.Shared
+@inject IModalService Modal
+@inject HttpClient Http
+
+<EditForm Model="@budgetCategory" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="shortName" class="col-form-label-sm">Name</label>
+        <InputText id="shortName" bind-Value="@budgetCategory.ShortName" Class="form-control"/>
+    </div>
+    <div class="form-group">
+        <label for="description" class="col-form-label-sm">Description</label>
+        <InputText Id="description" bind-Value="@budgetCategory.Description" Class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="@(() => Cancel())">Cancel</button>
+</EditForm>
+
+@functions {
+    private BudgetCategory budgetCategory = new BudgetCategory();
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Post, "api/BudgetCategories", budgetCategory);
+        Modal.Close(ModalResult.Ok($"The category {budgetCategory.ShortName} was created sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}

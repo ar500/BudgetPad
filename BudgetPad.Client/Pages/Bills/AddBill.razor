@@ -1,0 +1,77 @@
+﻿@page "/addbill"
+@using BudgetPad.Shared.Dtos
+@inject IModalService Modal
+@inject HttpClient Http
+
+@if (budgetCategories == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+<EditForm Model="@bill" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="shortName" class="col-form-label-sm">Name</label>
+        <InputText id="shortName" bind-Value="@bill.ShortName" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="description" class="col-form-label-sm">Description</label>
+        <InputText Id="description" bind-Value="@bill.Description" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="budget_category" class="col-form-label-sm">BudgetCategory</label>
+        <InputSelect Id="budget_category" bind-Value="@bill.CategoryName" Class="form-control-sm">
+            @foreach (var category in budgetCategories)
+            {
+                <option value="@category.ShortName">@category.ShortName</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label for="amount_planned" class="col-form-label-sm">Amount Planned</label>
+        <InputNumber Id="amount_planned" bind-Value="@bill.AmountPlanned" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="due_date" class="col-form-label-sm">Date Due</label>
+        <InputDate Id="due_date" bind-Value="@bill.DueDate" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="company_name" class="col-form-label-sm">Company Name</label>
+        <InputText Id="company_name" bind-Value="@bill.CompanyName" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="account_number" class="col-form-label-sm">Company Account Number</label>
+        <InputText Id="account_number" bind-Value="@bill.PayoutAccountNumber" Class="form-control-sm" />
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="@(() => Cancel())">Cancel</button>
+</EditForm>
+}
+
+
+@functions {
+    private BillForCreateDto bill = new BillForCreateDto();
+
+    private BudgetCategoryDto[] budgetCategories { get; set; }
+
+
+    protected override async Task OnInitAsync()
+    {
+        budgetCategories = await Http.GetJsonAsync<BudgetCategoryDto[]>("api/BudgetCategories/GetCategories");
+
+        bill.DueDate = DateTime.Now.AddDays(5);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Post, "api/bills", bill);
+        Modal.Close(ModalResult.Ok($"The bill {bill.ShortName} was created sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}

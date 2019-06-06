@@ -1,0 +1,76 @@
+﻿@page "/categories"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+<h1>Budget Categories</h1>
+
+@if (categories == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <button class="btn btn-primary btn-sm" type="button" onclick="@(() => AddCategory())"><i class="oi oi-plus"></i>Add Category</button>
+    <div class="card-columns mt-3">
+        @foreach (var category in categories)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-title">
+                        <h3>@category.ShortName</h3>
+                    </div>
+                    <div class="card-text">
+                        <p>@category.Description</p>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button class="btn btn-sm btn-light" onclick="@(() => EditCategory(category.Id))"><i class="oi oi-pencil" /></button>
+                    <button class="btn btn-sm btn-light" onclick="@(() => DeleteCategory(category.Id, category.ShortName))"><i class="oi oi-delete" /></button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@functions {
+    BudgetCategoryDto[] categories;
+
+    protected override async Task OnInitAsync()
+    {
+        categories = await Http.GetJsonAsync<BudgetCategoryDto[]>("api/BudgetCategories/GetCategories");
+    }
+
+    private void AddCategory()
+    {
+        Modal.Show("New Category", typeof(AddCategory));
+        Modal.OnClose += RefreshCategories;
+    }
+
+    private void EditCategory(Guid id)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("categoryId", id);
+        Modal.Show("Edit Category", typeof(EditCategory), parameters);
+        Modal.OnClose += RefreshCategories;
+
+    }
+
+    private async void RefreshCategories(ModalResult a)
+    {
+        Console.WriteLine("Refresh Hit");
+        categories = await Http.GetJsonAsync<BudgetCategoryDto[]>("api/BudgetCategories/GetCategories");
+        this.StateHasChanged();
+        Modal.OnClose -= RefreshCategories;
+    }
+
+    private void DeleteCategory(Guid id, string shortName)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("categoryId", id);
+        parameters.Add("shortName", shortName);
+
+        Modal.Show("Delete Category", typeof(DeleteCategory), parameters);
+        Modal.OnClose += RefreshCategories;
+    }
+}

@@ -1,0 +1,127 @@
+﻿@page "/bills"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+<h1>Bills</h1>
+
+@if (bills == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <button class="btn btn-primary btn-sm" type="button" onclick="@(() => AddBill())"><i class="oi oi-plus"></i>Add Bill</button>
+    <div class="card-columns mt-3">
+        @foreach (var bill in bills)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <h3 class="card-title text-md-left">@bill.ShortName</h3>
+                            <h6 class="card-subtitle text-left text-info">@bill.BudgetCategory.ShortName</h6>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col text-md-left">
+                            <p class="card-text">@bill.Description</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm">
+                            <span class="card-text text-muted text-sm-left">Due Date:</span>
+                        </div>
+                        <div class="col">
+                            @if (bill.AmountSpent == bill.AmountPlanned)
+                            {
+                                <span class="card-text text-info">
+                                    Paid: @bill.DatePaid.ToShortDateString()
+                                </span>
+                            }
+                            <span class="card-text @(bill.DueDate <= DateTime.Now ? "text-danger" : "text-dark")">
+                                @bill.DueDate.ToShortDateString()
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm">
+                            <span class="card-text text-muted text-sm-left">Budgeted:</span>
+                        </div>
+                        <div class="col">
+                            <span class="card-text text-dark">$@bill.AmountPlanned</span>
+                        </div>
+                    </div>
+                    @if (bill.CompanyName != null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col-sm">
+                                <span class="card-text text-muted text-sm-left">Company:</span>
+                            </div>
+                            <div class="col">
+                                <span class="card-text text-dark">@bill.CompanyName</span>
+                            </div>
+                        </div>
+                    }
+                    @if (bill.PayoutAccountNumber != null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col-sm">
+                                <span class="card-text text-muted text-sm-left">Account No:</span>
+                            </div>
+                            <div class="col">
+                                <span class="card-text text-dark">@bill.PayoutAccountNumber</span>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+                <div class="card-footer text-center">
+                    <button class="btn btn-sm btn-light" onclick="@(() => EditBill(bill.Id))"><i class="oi oi-pencil" /></button>
+                    <button class="btn btn-sm btn-light" onclick="@(() => DeleteBill(bill.Id, bill.ShortName))"><i class="oi oi-delete" /></button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@functions{
+    BillDto[] bills;
+
+    protected override async Task OnInitAsync()
+    {
+        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+    }
+
+    private void AddBill()
+    {
+        Modal.Show("New Bill", typeof(AddBill));
+        Modal.OnClose += RefreshBills;
+    }
+
+    private void EditBill(Guid id)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("billId", id);
+
+        Modal.Show("Edit Bill", typeof(EditBill), parameters);
+        Modal.OnClose += RefreshBills;
+    }
+
+    private void DeleteBill(Guid id, string shortName)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("billId", id);
+        parameters.Add("shortName", shortName);
+
+        Modal.Show("Delete Bill", typeof(DeleteBill), parameters);
+        Modal.OnClose += RefreshBills;
+    }
+
+     private async void RefreshBills(ModalResult a)
+    {
+        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+        this.StateHasChanged();
+        Modal.OnClose -= RefreshBills;
+    }
+}

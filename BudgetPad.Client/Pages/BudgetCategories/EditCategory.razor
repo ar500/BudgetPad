@@ -1,0 +1,44 @@
+﻿@page "/editcategory"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+<EditForm Model="@budgetCategory" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText id="name" bind-Value="@budgetCategory.ShortName" />
+    <InputText Id="description" bind-Value="@budgetCategory.Description" />
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+    <button type="button" class="btn btn-secondary" onclick="@Cancel">Cancel</button>
+</EditForm>
+
+@functions {
+    private BudgetCategoryDto budgetCategory = new BudgetCategoryDto();
+
+
+    [CascadingParameter] ModalParameters Parameters { get; set; }
+
+
+    private Guid categoryId { get; set; }
+
+
+    protected override async Task OnInitAsync()
+    {
+        categoryId = Parameters.Get<Guid>("categoryId");
+
+        budgetCategory = await Http.GetJsonAsync<BudgetCategoryDto>("api/BudgetCategories/" + categoryId);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Put, "api/BudgetCategories/" + categoryId, budgetCategory);
+        Modal.Close(ModalResult.Ok($"Category ID {categoryId} was edited successfully."));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}

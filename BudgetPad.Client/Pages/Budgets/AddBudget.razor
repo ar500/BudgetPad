@@ -1,0 +1,79 @@
+﻿@page "/addbudget"
+@using BudgetPad.Shared.Dtos
+@inject IModalService Modal
+@inject HttpClient Http
+
+@if (bills == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+<EditForm Model="@budget" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="shortName" class="col-form-label-sm">Name</label>
+        <InputText id="shortName" bind-Value="@budget.ShortName" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="start_date" class="col-form-label-sm">Start Date</label>
+        <InputDate Id="start_date" bind-Value="@budget.CycleStartDate" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="end_date" class="col-form-label-sm">End Date</label>
+        <InputDate Id="end_date" bind-Value="@budget.CycleEndDate" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="description" class="col-form-label-sm">Description</label>
+        <InputTextArea Id="description" bind-Value="@budget.Description" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="allotted_funds" class="col-form-label-sm">Allotted Funds</label>
+        <InputNumber Id="allotted_funds" bind-Value="@budget.AllottedFunds" Class="form-control-sm" />
+    </div>
+    <div class="form-group">
+        <label for="bills" class="col-form-label-sm">Bills</label>
+        <select asp-for="@budget.ReturnedBillNames" asp-items=""></select>
+        @*<InputSelect Id="bills" bind-Value="@budget.ReturnedBillNames" Class="form-control-sm">
+            @foreach (var bill in bills)
+                {
+                    <option value="@bill.ShortName">@bill.ShortName</option>
+                }
+            /**/
+            /**/
+            /**/
+            /**/
+        </InputSelect>*@
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+    <button type="button" class="btn btn-secondary btn-sm" onclick="@(() => Cancel())">Cancel</button>
+</EditForm>
+}
+
+
+@functions {
+    private BudgetForCreateDto budget = new BudgetForCreateDto();
+
+    private BillDto[] bills { get; set; }
+
+    protected override async Task OnInitAsync()
+    {
+        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+
+        budget.CycleStartDate = DateTime.Now;
+        budget.CycleEndDate = DateTime.Now.AddMonths(1);
+        budget.AllottedFunds = 0;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Post, "api/budgets", budget);
+        Modal.Close(ModalResult.Ok($"The budget {budget.ShortName} was created sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}

@@ -1,0 +1,35 @@
+﻿@page "/deletecategory"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+<div class="alert alert-danger" role="alert">
+    Are you sure that you want to delete @shortName<br />
+    <button class="btn btn-danger" onclick="@(() => Delete())">Delete</button>
+    <button class="btn btn-secondary" onclick="@(() => Cancel())">Cancel</button>
+</div>
+
+@functions{
+    [CascadingParameter] ModalParameters Parameters { get; set; }
+
+    private Guid categoryId { get; set; }
+
+    private string shortName { get; set; }
+
+    protected override void OnInit()
+    {
+        categoryId = Parameters.Get<Guid>("categoryId");
+        shortName = Parameters.Get<string>("shortName");
+    }
+
+    private async Task Delete()
+    {
+        await Http.DeleteAsync("api/BudgetCategories/" + categoryId);
+        Modal.Close(ModalResult.Ok($"Category ID {categoryId} was deleted successfully."));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}
