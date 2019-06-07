@@ -11,6 +11,7 @@ using BudgetPad.Shared;
 using Microsoft.EntityFrameworkCore;
 using BudgetPad.Shared.Dtos;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json;
 
 namespace BudgetPad.Server
 {
@@ -20,7 +21,8 @@ namespace BudgetPad.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().AddNewtonsoftJson();
+            services.AddMvc()
+                .AddNewtonsoftJson();
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(

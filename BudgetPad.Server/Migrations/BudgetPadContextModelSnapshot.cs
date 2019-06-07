@@ -170,7 +170,7 @@ namespace BudgetPad.Server.Migrations
                         .IsRequired();
 
                     b.HasOne("BudgetPad.Shared.Budget", null)
-                        .WithMany("budgets")
+                        .WithMany("Bills")
                         .HasForeignKey("BudgetId");
                 });
 

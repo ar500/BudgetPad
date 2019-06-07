@@ -9,6 +9,7 @@ using BudgetPad.Server.DataAccess;
 using BudgetPad.Shared;
 using AutoMapper;
 using BudgetPad.Shared.Dtos;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace BudgetPad.Server.Controllers.Budgets
 {
@@ -34,7 +35,6 @@ namespace BudgetPad.Server.Controllers.Budgets
             {
                 budgetsFromRepo = await _context.Budgets
                     .Include(b => b.Bills)
-                    .ThenInclude(c => c.BudgetCategory)
                     .ToListAsync();
             }
             else
@@ -131,6 +131,54 @@ namespace BudgetPad.Server.Controllers.Budgets
             await _context.SaveChangesAsync();
 
             return budget;
+        }
+
+        [HttpPost("[action]/{budgetId}")]
+        public async Task<IActionResult> UpdateBills(Guid budgetId, [FromBody] List<Guid> billIds)
+        {
+            if (!BudgetExists(budgetId))
+            {
+                return BadRequest();
+            }
+
+            var budgetToUpdate = await _context.Budgets
+                .Include(b => b.Bills)
+                .ThenInclude(c => c.BudgetCategory)
+                .FirstOrDefaultAsync(b => b.Id == budgetId);
+
+            if(budgetToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            var billsFromUser = await _context.Bills
+                .Where(bill => billIds.Contains(bill.Id))
+                .Include(c => c.BudgetCategory)
+                .ToListAsync();
+
+            foreach(var bill in billsFromUser) // for every bill that the user wants to add
+            {
+                if (!budgetToUpdate.Bills.Contains(bill)) // if it is not already added to the budget in the db
+                {
+                    budgetToUpdate.Bills.Add(bill); // add it
+                }
+            }
+
+            // Now we can intersect the list to remove the bills that were removed
+            budgetToUpdate.Bills = budgetToUpdate.Bills.Intersect(billsFromUser).ToList();
+
+            _context.Entry(budgetToUpdate).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw;
+            }
+
+            return NoContent();
         }
 
         private bool BudgetExists(Guid id)

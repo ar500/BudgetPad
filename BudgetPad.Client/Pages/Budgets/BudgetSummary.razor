@@ -1,0 +1,69 @@
+﻿@page "/budgetsummary"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+    
+<div class="row">
+    <div class="col">
+        <h3 class="card-title text-md-left">@budget.ShortName</h3>
+        @if (IsCurrentBudget(budget))
+        {
+            <h6 class="card-subtitle text-left text-info">Current Budget</h6>
+        }
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col text-md-left">
+        <p class="card-text">@budget.Description</p>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">Start Date</span>
+    </div>
+    <div class="col">
+        <span class="card-text text-dark">
+            @budget.CycleStartDate.ToShortDateString()
+        </span>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">End Date</span>
+    </div>
+    <div class="col">
+        <span class="card-text text-dark">
+            @budget.CycleEndDate.ToShortDateString()
+        </span>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">Funds Allotted:</span>
+    </div>
+    <div class="col">
+        <span class="card-text text-dark">$@budget.AllottedFunds</span>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">Attached Expenses</span>
+    </div>
+    <div class="col">
+        <span class="card-text text-dark mr-1">@budget.Bills.Count</span>
+    </div>
+</div>
+        
+
+@functions {
+
+    [Parameter]
+    private BudgetDto budget { get; set; }
+
+    private bool IsCurrentBudget(BudgetDto budget)
+    {
+        var today = DateTime.Now;
+        return budget.CycleStartDate <= today && budget.CycleEndDate >= today;
+    }
+}

@@ -1,5 +1,6 @@
 ﻿@page "/addbill"
 @using BudgetPad.Shared.Dtos
+@using BudgetPad.Client.Pages.BudgetCategories
 @inject IModalService Modal
 @inject HttpClient Http
 
@@ -28,6 +29,9 @@ else
                 <option value="@category.ShortName">@category.ShortName</option>
             }
         </InputSelect>
+        <button type="button" class="btn btn-sm btn-primary" onclick="@(() => AddCategory())">
+            <i class="oi oi-plus">New Category</i>
+        </button>
     </div>
     <div class="form-group">
         <label for="amount_planned" class="col-form-label-sm">Amount Planned</label>
@@ -73,5 +77,18 @@ else
     private void Cancel()
     {
         Modal.Close(ModalResult.Cancel());
+    }
+
+    private void AddCategory()
+    {
+        Modal.Show("New Category", typeof(AddCategory));
+        Modal.OnClose += ReloadModal;
+    }
+    // TODO: Impliment Add from modal logic in all add and edit components.
+    private async void ReloadModal(ModalResult a)
+    {
+        budgetCategories = await Http.GetJsonAsync<BudgetCategoryDto[]>("api/BudgetCategories/GetCategories");
+        this.StateHasChanged();
+        Modal.OnClose -= ReloadModal;
     }
 }

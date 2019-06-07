@@ -9,57 +9,64 @@
 }
 else
 {
-<EditForm Model="@budget" OnValidSubmit="@HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="form-group">
-        <label for="shortName" class="col-form-label-sm">Name</label>
-        <InputText id="shortName" bind-Value="@budget.ShortName" Class="form-control-sm" />
-    </div>
-    <div class="form-group">
-        <label for="start_date" class="col-form-label-sm">Start Date</label>
-        <InputDate Id="start_date" bind-Value="@budget.CycleStartDate" Class="form-control-sm" />
-    </div>
-    <div class="form-group">
-        <label for="end_date" class="col-form-label-sm">End Date</label>
-        <InputDate Id="end_date" bind-Value="@budget.CycleEndDate" Class="form-control-sm" />
-    </div>
-    <div class="form-group">
-        <label for="description" class="col-form-label-sm">Description</label>
-        <InputTextArea Id="description" bind-Value="@budget.Description" Class="form-control-sm" />
-    </div>
-    <div class="form-group">
-        <label for="allotted_funds" class="col-form-label-sm">Allotted Funds</label>
-        <InputNumber Id="allotted_funds" bind-Value="@budget.AllottedFunds" Class="form-control-sm" />
-    </div>
-    <div class="form-group">
-        <label for="bills" class="col-form-label-sm">Bills</label>
-        <select asp-for="@budget.ReturnedBillNames" asp-items=""></select>
-        @*<InputSelect Id="bills" bind-Value="@budget.ReturnedBillNames" Class="form-control-sm">
-            @foreach (var bill in bills)
-                {
-                    <option value="@bill.ShortName">@bill.ShortName</option>
-                }
-            /**/
-            /**/
-            /**/
-            /**/
-        </InputSelect>*@
-    </div>
-    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
-    <button type="button" class="btn btn-secondary btn-sm" onclick="@(() => Cancel())">Cancel</button>
-</EditForm>
-}
+    <EditForm Model="@budget" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
+        <DataAnnotationsValidator />
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Name" ColSpanMd="6">
+                <Template>
+                    <DxTextBox bind-Text=@budget.ShortName></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
 
+            <DxFormLayoutItem Caption="Start Date" ColSpanMd="6">
+                <Template>
+                    <DxDateEdit bind-Date=@budget.CycleStartDate></DxDateEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="End Date" ColSpanMd="6">
+                <Template>
+                    <DxDateEdit bind-Date=@budget.CycleEndDate></DxDateEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Description" ColSpanMd="6">
+                <Template>
+                    <DxTextBox bind-Text=@budget.Description></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Amount Allotted" ColSpanMd="6">
+                <Template>
+                    <DxSpinEdit bind-Value=@budget.AllottedFunds></DxSpinEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <ValidationSummary />
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <button type="submit">Save</button>
+                    <button type="button" onclick=@Cancel>Cancel</button>
+                </Template>
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </EditForm>
+}
 
 @functions {
     private BudgetForCreateDto budget = new BudgetForCreateDto();
 
-    private BillDto[] bills { get; set; }
+    private List<BillDto> bills { get; set; }
 
     protected override async Task OnInitAsync()
     {
-        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+        bills = await Http.GetJsonAsync<List<BillDto>>("api/Bills?includeCategories=true");
 
         budget.CycleStartDate = DateTime.Now;
         budget.CycleEndDate = DateTime.Now.AddMonths(1);
@@ -75,5 +82,10 @@ else
     private void Cancel()
     {
         Modal.Close(ModalResult.Cancel());
+    }
+
+    private async void OnSelectedBillChanged(BillDto bill)
+    {
+        Console.WriteLine("Hitting event handler.");
     }
 }

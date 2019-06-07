@@ -40,125 +40,87 @@ namespace BudgetPad.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "budgets",
+                name: "ExpenseBase",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
                     DatePaid = table.Column<DateTime>(nullable: false),
                     AmountSpent = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BudgetCategoryId = table.Column<Guid>(nullable: false),
                     BudgetId = table.Column<Guid>(nullable: true),
-                    EntryDateTime = table.Column<DateTime>(nullable: false),
+                    EntryDateTime = table.Column<DateTime>(nullable: false, defaultValueSql: "getdate()"),
                     RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true),
-                    ShortName = table.Column<string>(maxLength: 50, nullable: false),
-                    Description = table.Column<string>(maxLength: 200, nullable: false),
-                    DueDate = table.Column<DateTime>(nullable: false),
-                    AmountPlanned = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Discriminator = table.Column<string>(nullable: false),
+                    BudgetCategoryId = table.Column<Guid>(nullable: true),
+                    ShortName = table.Column<string>(maxLength: 50, nullable: true),
+                    Description = table.Column<string>(maxLength: 200, nullable: true),
+                    DueDate = table.Column<DateTime>(nullable: true),
+                    AmountPlanned = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     CompanyName = table.Column<string>(maxLength: 50, nullable: true),
-                    PayoutAccountNumber = table.Column<string>(maxLength: 100, nullable: true)
+                    PayoutAccountNumber = table.Column<string>(maxLength: 100, nullable: true),
+                    ExpenseLogEntry_BudgetCategoryId = table.Column<Guid>(nullable: true),
+                    Remarks = table.Column<string>(maxLength: 200, nullable: true),
+                    UnplannedExpense_BudgetCategoryId = table.Column<Guid>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_budgets", x => x.Id);
+                    table.PrimaryKey("PK_ExpenseBase", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_budgets_Categories_BudgetCategoryId",
+                        name: "FK_ExpenseBase_Categories_BudgetCategoryId",
                         column: x => x.BudgetCategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_budgets_Budgets_BudgetId",
+                        name: "FK_ExpenseBase_Budgets_BudgetId",
                         column: x => x.BudgetId,
                         principalTable: "Budgets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ExpenseEntries",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    DatePaid = table.Column<DateTime>(nullable: false),
-                    AmountSpent = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BudgetCategoryId = table.Column<Guid>(nullable: false),
-                    BudgetId = table.Column<Guid>(nullable: true),
-                    EntryDateTime = table.Column<DateTime>(nullable: false),
-                    RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true),
-                    Remarks = table.Column<string>(maxLength: 200, nullable: true),
-                    ExpenseId = table.Column<Guid>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ExpenseEntries", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExpenseEntries_Categories_BudgetCategoryId",
-                        column: x => x.BudgetCategoryId,
+                        name: "FK_ExpenseBase_Categories_ExpenseLogEntry_BudgetCategoryId",
+                        column: x => x.ExpenseLogEntry_BudgetCategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "UnplannedExpenses",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    DatePaid = table.Column<DateTime>(nullable: false),
-                    AmountSpent = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BudgetCategoryId = table.Column<Guid>(nullable: false),
-                    BudgetId = table.Column<Guid>(nullable: true),
-                    EntryDateTime = table.Column<DateTime>(nullable: false),
-                    RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UnplannedExpenses", x => x.Id);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_UnplannedExpenses_Categories_BudgetCategoryId",
-                        column: x => x.BudgetCategoryId,
+                        name: "FK_ExpenseBase_Categories_UnplannedExpense_BudgetCategoryId",
+                        column: x => x.UnplannedExpense_BudgetCategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_budgets_BudgetCategoryId",
-                table: "budgets",
+                name: "IX_ExpenseBase_BudgetCategoryId",
+                table: "ExpenseBase",
                 column: "BudgetCategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_budgets_BudgetId",
-                table: "budgets",
+                name: "IX_ExpenseBase_BudgetId",
+                table: "ExpenseBase",
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExpenseEntries_BudgetCategoryId",
-                table: "ExpenseEntries",
-                column: "BudgetCategoryId");
+                name: "IX_ExpenseBase_ExpenseLogEntry_BudgetCategoryId",
+                table: "ExpenseBase",
+                column: "ExpenseLogEntry_BudgetCategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UnplannedExpenses_BudgetCategoryId",
-                table: "UnplannedExpenses",
-                column: "BudgetCategoryId");
+                name: "IX_ExpenseBase_UnplannedExpense_BudgetCategoryId",
+                table: "ExpenseBase",
+                column: "UnplannedExpense_BudgetCategoryId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "budgets");
-
-            migrationBuilder.DropTable(
-                name: "ExpenseEntries");
-
-            migrationBuilder.DropTable(
-                name: "UnplannedExpenses");
-
-            migrationBuilder.DropTable(
-                name: "Budgets");
+                name: "ExpenseBase");
 
             migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Budgets");
         }
     }
 }
