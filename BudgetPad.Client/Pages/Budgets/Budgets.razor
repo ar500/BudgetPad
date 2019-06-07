@@ -55,12 +55,12 @@ else
 
     private void DeleteBudget(Guid id, string shortName)
     {
-        //var parameters = new ModalParameters();
-        //parameters.Add("budgetId", id);
-        //parameters.Add("shortName", shortName);
+        var parameters = new ModalParameters();
+        parameters.Add("budgetId", id);
+        parameters.Add("shortName", shortName);
 
-        //Modal.Show("Delete budget", typeof(Deletebudget), parameters);
-        //Modal.OnClose += Refreshbudgets;
+        Modal.Show("Delete budget", typeof(DeleteBudget), parameters);
+        Modal.OnClose += RefreshBudgets;
     }
 
     private void ShowAttachExpenses(BudgetDto budget)
