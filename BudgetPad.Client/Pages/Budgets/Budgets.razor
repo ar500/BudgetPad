@@ -46,11 +46,11 @@ else
 
     private void EditBudget(Guid id)
     {
-        //var parameters = new ModalParameters();
-        //parameters.Add("budgetId", id);
+        var parameters = new ModalParameters();
+        parameters.Add("budgetId", id);
 
-        //Modal.Show("Edit budget", typeof(Editbudget), parameters);
-        //Modal.OnClose += Refreshbudgets;
+        Modal.Show("Edit Budget", typeof(EditBudget), parameters);
+        Modal.OnClose += RefreshBudgets;
     }
 
     private void DeleteBudget(Guid id, string shortName)

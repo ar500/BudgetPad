@@ -66,14 +66,23 @@ namespace BudgetPad.Server.Controllers.Budgets
 
         // PUT: api/Budgets/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutBudget(Guid id, Budget budget)
+        public async Task<IActionResult> PutBudget(Guid id, BudgetForCreateDto budget)
         {
             if (id != budget.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(budget).State = EntityState.Modified;
+            if (!BudgetExists(id))
+            {
+                return NotFound();
+            }
+
+            var budgetToUpdate = await _context.Budgets.FindAsync(id);
+
+            var updatedBudget = Mapper.Map(budget, budgetToUpdate);
+
+            _context.Entry(updatedBudget).State = EntityState.Modified;
 
             try
             {
@@ -81,14 +90,7 @@ namespace BudgetPad.Server.Controllers.Budgets
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!BudgetExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return NoContent();

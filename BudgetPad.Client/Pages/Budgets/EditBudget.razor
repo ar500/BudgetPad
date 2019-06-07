@@ -1,0 +1,95 @@
+﻿@page "/editbudget"
+@using BudgetPad.Shared.Dtos
+@inject IModalService Modal
+@inject HttpClient Http
+
+@if (bills == null || budget == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="@budget" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
+        <DataAnnotationsValidator />
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Name" ColSpanMd="6">
+                <Template>
+                    <DxTextBox bind-Text=@budget.ShortName></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Start Date" ColSpanMd="6">
+                <Template>
+                    <DxDateEdit bind-Date=@budget.CycleStartDate></DxDateEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="End Date" ColSpanMd="6">
+                <Template>
+                    <DxDateEdit bind-Date=@budget.CycleEndDate></DxDateEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Description" ColSpanMd="6">
+                <Template>
+                    <DxTextBox bind-Text=@budget.Description></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Amount Allotted" ColSpanMd="6">
+                <Template>
+                    <DxSpinEdit bind-Value=@budget.AllottedFunds></DxSpinEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <ValidationSummary />
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <button type="submit">Save</button>
+                    <button type="button" onclick=@Cancel>Cancel</button>
+                </Template>
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </EditForm>
+}
+
+@functions {
+
+    [CascadingParameter]
+    private ModalParameters Parameters { get; set; }
+
+    private BudgetForCreateDto budget = new BudgetForCreateDto();
+
+    private List<BillDto> bills { get; set; }
+
+    protected override async Task OnInitAsync()
+    {
+        bills = await Http.GetJsonAsync<List<BillDto>>("api/Bills?includeCategories=true");
+
+        var budgetId = Parameters.Get<Guid>("budgetId");
+
+        budget = await Http.GetJsonAsync<BudgetForCreateDto>("api/budgets/" + budgetId);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Put, "api/budgets/" + budget.Id, budget);
+        Modal.Close(ModalResult.Ok($"The budget {budget.ShortName} was modified sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+
+    private async void OnSelectedBillChanged(BillDto bill)
+    {
+        Console.WriteLine("Hitting event handler.");
+    }
+}
