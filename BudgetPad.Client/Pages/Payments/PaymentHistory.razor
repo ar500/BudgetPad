@@ -1,0 +1,27 @@
+﻿@page "/paymenthistory"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+    <DxDataGrid Data=@Payments PageSize=5 CssClass="text-center">
+        <DxDataGridCommandColumn Width="150px"></DxDataGridCommandColumn>
+        <DxDataGridDateEditColumn Field=@nameof(PaymentDto.DatePaid) Caption="Date Paid"></DxDataGridDateEditColumn>
+        <DxDataGridSpinEditColumn Field=@nameof(PaymentDto.AmountPaid) Caption="Amount Paid">
+            <DisplayTemplate>
+                @(((context as PaymentDto).AmountPaid).ToString("C2"))
+            </DisplayTemplate>
+        </DxDataGridSpinEditColumn>
+        <DxDataGridDateEditColumn Field=@nameof(PaymentDto.EntryDateTime) Caption="Date Entered"></DxDataGridDateEditColumn>
+    </DxDataGrid>
+
+@functions{
+    [CascadingParameter]
+    private ModalParameters ModalParameters { get; set; }
+
+    private IEnumerable<PaymentDto> Payments;
+
+    protected override void OnInit()
+    {
+        Payments = ModalParameters.Get<IEnumerable<PaymentDto>>("payments");
+    }
+}

@@ -1,6 +1,7 @@
 using Blazored.Modal;
 using Microsoft.AspNetCore.Components.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 
 namespace BudgetPad.Client
 {
@@ -8,7 +9,9 @@ namespace BudgetPad.Client
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
             services.AddBlazoredModal();
+            
         }
 
         public void Configure(IComponentsApplicationBuilder app)

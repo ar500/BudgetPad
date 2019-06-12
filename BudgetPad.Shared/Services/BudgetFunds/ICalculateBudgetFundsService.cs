@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BudgetPad.Server.Services.BudgetFunds
+namespace BudgetPad.Shared.Services.BudgetFunds
 {
     public interface ICalculateBudgetFundsService
     {

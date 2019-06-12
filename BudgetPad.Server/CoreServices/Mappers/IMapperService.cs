@@ -1,4 +1,4 @@
-﻿namespace BudgetPad.Server.Services.Mapper
+﻿namespace BudgetPad.Server.CoreServices.Mappers
 {
     public interface IMapperService
     {

@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetPad.Server.Migrations
 {
     [DbContext(typeof(BudgetPadContext))]
-    [Migration("20190607115829_initial")]
-    partial class initial
+    [Migration("20190610160430_inital")]
+    partial class inital
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,6 +20,51 @@ namespace BudgetPad.Server.Migrations
                 .HasAnnotation("ProductVersion", "3.0.0-preview5.19227.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+            modelBuilder.Entity("BudgetPad.Shared.Bill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<decimal>("AmountPlanned")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("BudgetCategoryId");
+
+                    b.Property<Guid?>("BudgetId");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200);
+
+                    b.Property<DateTime>("DueDate");
+
+                    b.Property<DateTime>("EntryDateTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<string>("PayoutAccountNumber")
+                        .HasMaxLength(100);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate();
+
+                    b.Property<string>("ShortName")
+                        .IsRequired()
+                        .HasMaxLength(50);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetCategoryId");
+
+                    b.HasIndex("BudgetId");
+
+                    b.ToTable("Bills");
+                });
 
             modelBuilder.Entity("BudgetPad.Shared.Budget", b =>
                 {
@@ -74,20 +119,76 @@ namespace BudgetPad.Server.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("BudgetPad.Shared.ExpenseBase", b =>
+            modelBuilder.Entity("BudgetPad.Shared.ExpenseLogEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<decimal>("AmountSpent")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<Guid>("BudgetCategoryId");
 
                     b.Property<Guid?>("BudgetId");
 
+                    b.Property<DateTime>("EntryDateTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(200);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetCategoryId");
+
+                    b.ToTable("ExpenseLogs");
+                });
+
+            modelBuilder.Entity("BudgetPad.Shared.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("BillId");
+
                     b.Property<DateTime>("DatePaid");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired();
+                    b.Property<DateTime>("EntryDateTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<Guid?>("ExpenseLogEntryId");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate();
+
+                    b.Property<Guid?>("UnplannedExpenseId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillId");
+
+                    b.HasIndex("ExpenseLogEntryId");
+
+                    b.HasIndex("UnplannedExpenseId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("BudgetPad.Shared.UnplannedExpense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("BudgetCategoryId");
+
+                    b.Property<Guid?>("BudgetId");
 
                     b.Property<DateTime>("EntryDateTime")
                         .ValueGeneratedOnAddOrUpdate()
@@ -99,74 +200,15 @@ namespace BudgetPad.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ExpenseBase");
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("ExpenseBase");
-                });
-
-            modelBuilder.Entity("BudgetPad.Shared.Bill", b =>
-                {
-                    b.HasBaseType("BudgetPad.Shared.ExpenseBase");
-
-                    b.Property<decimal>("AmountPlanned")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("BudgetCategoryId");
-
-                    b.Property<string>("CompanyName")
-                        .HasMaxLength(50);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(200);
-
-                    b.Property<DateTime>("DueDate");
-
-                    b.Property<string>("PayoutAccountNumber")
-                        .HasMaxLength(100);
-
-                    b.Property<string>("ShortName")
-                        .IsRequired()
-                        .HasMaxLength(50);
-
                     b.HasIndex("BudgetCategoryId");
 
-                    b.HasIndex("BudgetId");
-
-                    b.HasDiscriminator().HasValue("Bill");
-                });
-
-            modelBuilder.Entity("BudgetPad.Shared.ExpenseLogEntry", b =>
-                {
-                    b.HasBaseType("BudgetPad.Shared.ExpenseBase");
-
-                    b.Property<Guid>("BudgetCategoryId")
-                        .HasColumnName("ExpenseLogEntry_BudgetCategoryId");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(200);
-
-                    b.HasIndex("BudgetCategoryId");
-
-                    b.HasDiscriminator().HasValue("ExpenseLogEntry");
-                });
-
-            modelBuilder.Entity("BudgetPad.Shared.UnplannedExpense", b =>
-                {
-                    b.HasBaseType("BudgetPad.Shared.ExpenseBase");
-
-                    b.Property<Guid>("BudgetCategoryId")
-                        .HasColumnName("UnplannedExpense_BudgetCategoryId");
-
-                    b.HasIndex("BudgetCategoryId");
-
-                    b.HasDiscriminator().HasValue("UnplannedExpense");
+                    b.ToTable("UnplannedExpenses");
                 });
 
             modelBuilder.Entity("BudgetPad.Shared.Bill", b =>
                 {
                     b.HasOne("BudgetPad.Shared.BudgetCategory", "BudgetCategory")
-                        .WithMany("budgets")
+                        .WithMany()
                         .HasForeignKey("BudgetCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -183,6 +225,21 @@ namespace BudgetPad.Server.Migrations
                         .HasForeignKey("BudgetCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BudgetPad.Shared.Payment", b =>
+                {
+                    b.HasOne("BudgetPad.Shared.Bill", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("BillId");
+
+                    b.HasOne("BudgetPad.Shared.ExpenseLogEntry", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("ExpenseLogEntryId");
+
+                    b.HasOne("BudgetPad.Shared.UnplannedExpense", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("UnplannedExpenseId");
                 });
 
             modelBuilder.Entity("BudgetPad.Shared.UnplannedExpense", b =>

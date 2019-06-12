@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BudgetPad.Shared.Dtos
 {
@@ -12,8 +9,5 @@ namespace BudgetPad.Shared.Dtos
         public string ShortName { get; set; }
 
         public string Description { get; set; }
-
-        // TODO: Create BillDto
-        //public ICollection<Bill> budgets { get; set; }
     }
 }

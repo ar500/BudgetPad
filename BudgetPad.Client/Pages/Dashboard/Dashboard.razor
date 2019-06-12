@@ -1,0 +1,41 @@
+﻿@page "/dashboard/{budgetId}"
+@using BudgetPad.Shared.Dtos.DtoExtensions
+@inject HttpClient Http
+
+<h1>Budget dashboard</h1>
+<p>@budgetId</p>
+@if (budget == null)
+{
+    <span>Loading...</span>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-12 text-center border">
+            <p>Quick Links Area</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-center border">
+            <p>Sidebar</p>
+        </div>
+        <div class="col-md-10 text-center border">
+            <div class="card-columns">
+                <CategoryBreakdown CategoryGroups=@budget.CategoryGroups/>
+            </div>
+        </div>
+    </div>
+}
+
+
+@functions {
+    [Parameter]
+    private string budgetId { get; set; }
+
+    private BudgetDtoExtension budget;
+
+    protected override async Task OnInitAsync()
+    {
+        budget = await Http.GetJsonAsync<BudgetDtoExtension>("api/budgets/" + budgetId);
+    }
+}

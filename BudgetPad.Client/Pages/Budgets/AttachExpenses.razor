@@ -15,7 +15,7 @@ else
         <DxDataGridColumn Field=@nameof(BillDto.ShortName) Caption="Name"></DxDataGridColumn>
         <DxDataGridColumn Field=@nameof(BillDto.Description) Caption="Description"></DxDataGridColumn>
         <DxDataGridDateEditColumn Field=@nameof(BillDto.DueDate) Caption="DueDate"></DxDataGridDateEditColumn>
-        <DxDataGridColumn Field=@nameof(BudgetDto.Bills) Caption="Attach" Width="150px">
+        <DxDataGridColumn Field=@nameof(BudgetDto.Bills) Caption="Attach" Width="20px">
             <DisplayTemplate>
                 @{
                     <input type="checkbox" checked=@IsAttached((context as BillDto)) onchange=@(eventArgs => { CheckboxClicked((context as BillDto).Id, eventArgs.Value); })/>

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace BudgetPad.Server.Services.BudgetFunds
+namespace BudgetPad.Shared.Services.BudgetFunds
 {
     public class CalculateBudgetFundsService : ICalculateBudgetFundsService
     {

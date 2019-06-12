@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BudgetPad.Server.DataAccess;
 using BudgetPad.Shared;
 using BudgetPad.Shared.Dtos;
 using Microsoft.Extensions.Logging;
+using BudgetPad.Server.CoreServices.Expense;
+using BudgetPad.Shared.Dtos.DtoExtensions;
 
 namespace BudgetPad.Server.Controllers.Bills
 {
@@ -20,16 +21,18 @@ namespace BudgetPad.Server.Controllers.Bills
     {
         private readonly BudgetPadContext _context;
         private readonly ILogger<BillsController> _logger;
+        private readonly IPaymentService _paymentService;
 
-        public BillsController(BudgetPadContext context, ILogger<BillsController> logger)
+        public BillsController(BudgetPadContext context, ILogger<BillsController> logger, IPaymentService paymentService)
         {
             _context = context;
             _logger = logger;
+            _paymentService = paymentService;
         }
 
         // GET: api/Bills
         [HttpGet]
-        public async Task<IActionResult> GetBills(bool includeCategories = false)
+        public async Task<IActionResult> GetBills(bool includeCategories = false, bool includeTotalPaid = false)
         {
             List<Bill> BillsFromRepo;
 
@@ -37,6 +40,7 @@ namespace BudgetPad.Server.Controllers.Bills
             {
                 BillsFromRepo = await _context.Bills
                     .Include(b => b.BudgetCategory)
+                    .Include(p => p.Payments)
                     .ToListAsync();
             }
             else
@@ -45,9 +49,16 @@ namespace BudgetPad.Server.Controllers.Bills
                     .ToListAsync();
             }
 
-            var BillsForUser = Mapper.Map<IEnumerable<BillDto>>(BillsFromRepo);
-
-            return Ok(BillsForUser);
+            if (includeTotalPaid)
+            {
+                var BillsForUser = Mapper.Map<IEnumerable<BillDtoExtension>>(BillsFromRepo);
+                return Ok(BillsForUser);
+            }
+            else
+            {
+                var BillsForUser = Mapper.Map<IEnumerable<BillDto>>(BillsFromRepo);
+                return Ok(BillsForUser);
+            }
         }
 
         // GET: api/Bills/5
@@ -168,6 +179,141 @@ namespace BudgetPad.Server.Controllers.Bills
             var billToReturn = Mapper.Map<BillDto>(bill);
 
             return Ok(billToReturn);
+        }
+
+        // GET: api/Bills/GetPayments/billId
+        [HttpGet("[action]/{billId}")]
+        public async Task<IActionResult> GetPayments(Guid billId)
+        {
+            if(billId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            if (!BillExists(billId))
+            {
+                return NotFound();
+            }
+
+            var paymentsFromRepo = await _context.Bills
+                .Where(b => b.Id == billId)
+                .Include(p => p.Payments)
+                .Select(p => p.Payments)
+                .ToListAsync();
+
+            var paymentsToReturn = Mapper.Map<IEnumerable<PaymentForListDto>>(paymentsFromRepo);
+
+            return Ok(paymentsToReturn);
+        }
+
+        // POST: api/Bills/AddPayment/billId
+        [HttpPost("[action]/{billId}")]
+        public async Task<IActionResult> AddPayment(Guid billId, PaymentForCreateDto payment)
+        {
+            if (billId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            if (!BillExists(billId))
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var billFromRepo = await _context.Bills
+                .Include(c => c.BudgetCategory)
+                .Include(p => p.Payments)
+                .FirstOrDefaultAsync(b => b.Id == billId);
+
+            var paymentToAdd = Mapper.Map<Payment>(payment);
+
+            await _paymentService.AddPaymentAsync(billFromRepo, paymentToAdd);
+
+            _context.Entry(billFromRepo).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw;
+            }
+
+            return CreatedAtAction("GetPayments", new { billId = billFromRepo.Id }, billFromRepo);
+        }
+
+        // PUT: api/Bills/UpdatePayment/paymentId
+        [HttpPut("[action]/{paymentId}")]
+        public async Task<IActionResult> UpdatePayment(Guid paymentId, PaymentForCreateDto payment)
+        {
+            if (paymentId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var paymentToUpdate = await _context.Payments
+                .FindAsync(paymentId);
+
+            if (paymentToUpdate == null)
+            {
+                return NotFound();
+            }
+
+            Mapper.Map(payment, paymentToUpdate);
+
+            _context.Entry(paymentToUpdate).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw;
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/Bills/DeletePayment/paymentId
+        [HttpDelete("[action]/{paymentId}")]
+        public async Task<IActionResult> DeletePayment(Guid paymentId)
+        {
+            if(paymentId == null)
+            {
+                return NoContent();
+            }
+
+            var paymentToRemove = await _context.Payments.FirstOrDefaultAsync(p => p.Id == paymentId);
+
+            if(paymentToRemove == null)
+            {
+                return NoContent();
+            }
+
+            _context.Entry(paymentToRemove).State = EntityState.Deleted;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw;
+            }
+
+            return NoContent();
         }
 
         private bool BillExists(Guid id)

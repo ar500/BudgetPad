@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BudgetPad.Server.DataAccess;
 using BudgetPad.Shared;
 using AutoMapper;
 using BudgetPad.Shared.Dtos;
-using Microsoft.AspNetCore.JsonPatch;
+using BudgetPad.Shared.Dtos.DtoExtensions;
 
 namespace BudgetPad.Server.Controllers.Budgets
 {
@@ -35,6 +34,7 @@ namespace BudgetPad.Server.Controllers.Budgets
             {
                 budgetsFromRepo = await _context.Budgets
                     .Include(b => b.Bills)
+                    .ThenInclude(c => c.BudgetCategory)
                     .ToListAsync();
             }
             else
@@ -43,23 +43,26 @@ namespace BudgetPad.Server.Controllers.Budgets
                     .ToListAsync();
             }
 
-            var budgetsToReturn = Mapper.Map<IEnumerable<BudgetDto>>(budgetsFromRepo);
+            var budgetsToReturn = Mapper.Map<IEnumerable<BudgetDtoExtension>>(budgetsFromRepo);
 
-            return Ok(budgetsFromRepo);
+            return Ok(budgetsToReturn);
         }
 
         // GET: api/Budgets/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(Guid id)
         {
-            var budget = await _context.Budgets.FindAsync(id);
+            var budget = await _context.Budgets
+                .Include(b => b.Bills)
+                .ThenInclude(c => c.BudgetCategory)
+                .FirstOrDefaultAsync(b => b.Id == id);
 
             if (budget == null)
             {
                 return NotFound();
             }
 
-            var budgetToReturn = Mapper.Map<BudgetDto>(budget);
+            var budgetToReturn = Mapper.Map<BudgetDtoExtension>(budget);
 
             return Ok(budgetToReturn);
         }
@@ -121,7 +124,7 @@ namespace BudgetPad.Server.Controllers.Budgets
 
         // DELETE: api/Budgets/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Budget>> DeleteBudget(Guid id)
+        public async Task<IActionResult> DeleteBudget(Guid id)
         {
             var budget = await _context.Budgets.FindAsync(id);
             if (budget == null)
@@ -132,7 +135,7 @@ namespace BudgetPad.Server.Controllers.Budgets
             _context.Budgets.Remove(budget);
             await _context.SaveChangesAsync();
 
-            return budget;
+            return NoContent();
         }
 
         [HttpPost("[action]/{budgetId}")]

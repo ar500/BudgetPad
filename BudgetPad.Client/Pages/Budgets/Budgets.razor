@@ -1,5 +1,7 @@
 ﻿@page "/budgets"
 @using BudgetPad.Shared.Dtos
+@using BudgetPad.Shared.Dtos.DtoExtensions
+@inject IUriHelper UriHelper
 @inject HttpClient Http
 @inject IModalService Modal
 
@@ -13,29 +15,30 @@ else
 {
     <button class="btn btn-primary btn-sm" type="button" onclick="@(() => AddBudget())"><i class="oi oi-plus"></i>Add Budget</button>
     <div class="card-columns mt-3">
-    @foreach (var budget in budgets)
-    {
-        <div class="card">
-            <div class="card-body">
-               <BudgetSummary budget="@budget" />
+        @foreach (var budget in budgets)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <BudgetSummary budget="@budget" />
+                </div>
+                <div class="card-footer text-center">
+                    <button class="btn btn-sm btn-light" onclick="@(() => ShowDashboard(budget.Id))"><i class="oi oi-dashboard" /></button>
+                    <button class="btn btn-sm btn-light" onclick="@(() => EditBudget(budget.Id))"><i class="oi oi-pencil" /></button>
+                    <button class="btn btn-sm btn-light" onclick="@(() => DeleteBudget(budget.Id, budget.ShortName))"><i class="oi oi-delete" /></button>
+                    <button class="btn btn-sm btn-light" onclick="@(() => ShowAttachExpenses(budget as BudgetDto))"><i class="oi oi-list-rich"></i></button>
+                </div>
             </div>
-            <div class="card-footer text-center">
-                <button class="btn btn-sm btn-light" onclick="@(() => EditBudget(budget.Id))"><i class="oi oi-pencil" /></button>
-                <button class="btn btn-sm btn-light" onclick="@(() => DeleteBudget(budget.Id, budget.ShortName))"><i class="oi oi-delete" /></button>
-                <button class="btn btn-sm btn-light" onclick="@(() => ShowAttachExpenses(budget))"><i class="oi oi-list-rich"></i></button>
-            </div>
-        </div>
-    }
+        }
     </div>
 }
 
 @functions
 {
-    BudgetDto[] budgets;
+    BudgetDtoExtension[] budgets;
 
     protected override async Task OnInitAsync()
     {
-        budgets = await Http.GetJsonAsync<BudgetDto[]>("api/budgets?includeBills=true");
+        budgets = await Http.GetJsonAsync<BudgetDtoExtension[]>("api/budgets?includeBills=true");
     }
 
     private void AddBudget()
@@ -73,8 +76,13 @@ else
 
     private async void RefreshBudgets(ModalResult a)
     {
-        budgets = await Http.GetJsonAsync<BudgetDto[]>("api/budgets?includeBills=true");
+        budgets = await Http.GetJsonAsync<BudgetDtoExtension[]>("api/budgets?includeBills=true");
         this.StateHasChanged();
         Modal.OnClose -= RefreshBudgets;
+    }
+
+    private async void ShowDashboard(Guid budgetId)
+    {
+        UriHelper.NavigateTo("dashboard/" + budgetId);
     }
 }

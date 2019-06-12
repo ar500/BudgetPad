@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace BudgetPad.Shared.Dtos
 {
-    public class BillDto : ExpenseBaseDto
+    public class BillDto
     {
+        public Guid Id { get; set; }
+
+        [Required]
+        public BudgetCategoryDto BudgetCategory { get; set; }
+
+        public Guid? BudgetId { get; set; }
+
         [Required]
         [MaxLength(50)]
         public string ShortName { get; set; }
@@ -27,5 +33,7 @@ namespace BudgetPad.Shared.Dtos
 
         [MaxLength(100)]
         public string PayoutAccountNumber { get; set; }
+
+        public IEnumerable<PaymentDto> Payments { get; set; }
     }
 }

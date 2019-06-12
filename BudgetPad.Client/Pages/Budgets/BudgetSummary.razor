@@ -1,9 +1,9 @@
 ﻿@page "/budgetsummary"
-@using BudgetPad.Shared.Dtos
+@using BudgetPad.Shared.Dtos.DtoExtensions
 @inject HttpClient Http
 @inject IModalService Modal
 
-    
+
 <div class="row">
     <div class="col">
         <h3 class="card-title text-md-left">@budget.ShortName</h3>
@@ -43,9 +43,36 @@
         <span class="card-text text-muted text-sm-left">Funds Allotted:</span>
     </div>
     <div class="col">
-        <span class="card-text text-dark">$@budget.AllottedFunds</span>
+        <span class="card-text text-dark">@budget.AllottedFunds.ToString("C")</span>
     </div>
 </div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">Funds Allocated:</span>
+    </div>
+    <div class="col">
+        <span class="card-text text-dark">@budget.AllocatedFunds.ToString("c")</span>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-sm">
+        <span class="card-text text-muted text-sm-left">Funds Remaining:</span>
+    </div>
+    <div class="col">
+        <span class="card-text @(budget.UnallocatedFunds < 0 ? "text-danger" : "text-dark")">@budget.UnallocatedFunds.ToString("c")</span>
+    </div>
+</div>
+@if (budget.CategoryGroups != null)
+{
+    <div class="row mt-3">
+        <div class="col-sm">
+            <span class="card-text text-muted text-sm-left">Categories:</span>
+        </div>
+        <div class="col">
+            <span class="card-text text-dark">@budget.CategoryGroups.Count()</span>
+        </div>
+    </div>
+}
 <div class="row mt-3">
     <div class="col-sm">
         <span class="card-text text-muted text-sm-left">Attached Expenses</span>
@@ -54,14 +81,13 @@
         <span class="card-text text-dark mr-1">@budget.Bills.Count</span>
     </div>
 </div>
-        
 
 @functions {
 
     [Parameter]
-    private BudgetDto budget { get; set; }
+    private BudgetDtoExtension budget { get; set; }
 
-    private bool IsCurrentBudget(BudgetDto budget)
+    private bool IsCurrentBudget(BudgetDtoExtension budget)
     {
         var today = DateTime.Now;
         return budget.CycleStartDate <= today && budget.CycleEndDate >= today;

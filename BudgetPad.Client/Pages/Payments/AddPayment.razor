@@ -1,0 +1,58 @@
+﻿@page "/addpayment"
+@using BudgetPad.Shared.Dtos
+@inject HttpClient Http
+@inject IModalService Modal
+
+<EditForm Model="@payment" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
+    <DataAnnotationsValidator />
+    <DxFormLayout>
+        <DxFormLayoutItem Caption="Date Paied" ColSpanMd="6">
+            <Template>
+                <DxDateEdit bind-Date=@payment.DatePaid></DxDateEdit>
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem Caption="Amount" ColSpanMd="6">
+            <Template>
+                <DxSpinEdit bind-Value="@payment.AmountPaid"></DxSpinEdit>
+            </Template>
+        </DxFormLayoutItem>
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <ValidationSummary />
+            </Template>
+        </DxFormLayoutItem>
+
+        <DxFormLayoutItem ColSpanMd="12">
+            <Template>
+                <button type="submit">Save</button>
+                <button type="button" onclick=@Cancel>Cancel</button>
+            </Template>
+        </DxFormLayoutItem>
+
+    </DxFormLayout>
+</EditForm>
+
+@functions {
+    private PaymentForCreateDto payment = new PaymentForCreateDto();
+
+   [CascadingParameter] ModalParameters Parameters { get; set; }
+
+    protected override void OnInit()
+    {
+        payment.DatePaid = DateTime.Now;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var billId = Parameters.Get<Guid>("billId");
+
+        await Http.SendJsonAsync(HttpMethod.Post, "api/bills/AddPayment/" + billId, payment);
+        Modal.Close(ModalResult.Ok($"The payment was added sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}

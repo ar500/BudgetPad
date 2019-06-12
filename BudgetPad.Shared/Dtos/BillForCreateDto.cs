@@ -1,12 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace BudgetPad.Shared.Dtos
 {
-    public class BillForCreateDto : ExpenseBaseForCreateDto
+    public class BillForCreateDto
     {
+        public Guid Id { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime DatePaid { get; set; }
+
+        [DataType(DataType.Currency)]
+        public decimal AmountSpent { get; set; }
+
+        [Required]
+        public string CategoryName { get; set; }
+
+        public BudgetCategoryDto BudgetCategory { get; set; }
+
+        public Guid? BudgetId { get; set; }
+
         [Required]
         [MaxLength(50)]
         public string ShortName { get; set; }

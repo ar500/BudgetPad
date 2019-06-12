@@ -14,10 +14,13 @@
     <Compile Remove="Migrations\20190604221125_setExpenseBaseEntrydateTimetoautoset.Designer.cs" />
     <Compile Remove="Migrations\20190604222104_addingbillstable.cs" />
     <Compile Remove="Migrations\20190604222104_addingbillstable.Designer.cs" />
+    <Compile Remove="Migrations\20190610160049_restructured_expenses.cs" />
+    <Compile Remove="Migrations\20190610160049_restructured_expenses.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="8.1.0" />
+    <PackageReference Include="AutoMapper" Version="8.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Server" Version="3.0.0-preview5-19227-01" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0-preview5-19227-01" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0-preview5.19227.1" />

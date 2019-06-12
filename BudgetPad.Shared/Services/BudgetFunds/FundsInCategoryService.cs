@@ -1,21 +1,18 @@
-﻿using BudgetPad.Shared;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace BudgetPad.Server.Services.BudgetFunds
+namespace BudgetPad.Shared.Services.BudgetFunds
 {
     public class FundsInCategoryService : IFundsInCategoryService
     {
-        public IEnumerable<FundsInCategoryModel> GroupExpensesByCat(IEnumerable<Bill> budgets)
+        public IEnumerable<FundsInCategoryModel> GroupExpensesByCat(IEnumerable<Bill> bills)
         {
-            if (!budgets.Any() || budgets == null)
+            if (!bills.Any() || bills == null)
             {
                 return null;
             }
 
-            var groupedCategories = budgets
+            var groupedCategories = bills
                 .GroupBy(e => e.BudgetCategory)
                 .Where(g => g.Key != null)
                 .Select(g => new FundsInCategoryModel

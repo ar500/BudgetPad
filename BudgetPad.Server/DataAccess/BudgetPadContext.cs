@@ -1,9 +1,5 @@
 ﻿using BudgetPad.Shared;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BudgetPad.Server.DataAccess
 {
@@ -17,7 +13,9 @@ namespace BudgetPad.Server.DataAccess
 
         public DbSet<UnplannedExpense> UnplannedExpenses { get; set; }
 
-        public DbSet<ExpenseLogEntry> ExpenseEntries { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+
+        public DbSet<ExpenseLogEntry> ExpenseLogs { get; set; }
 
         public BudgetPadContext(DbContextOptions<BudgetPadContext> options)
             : base(options)
@@ -26,7 +24,19 @@ namespace BudgetPad.Server.DataAccess
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ExpenseBase>()
+            modelBuilder.Entity<Bill>()
+                .Property(e => e.EntryDateTime)
+                .HasDefaultValueSql("getdate()");
+
+            modelBuilder.Entity<UnplannedExpense>()
+                .Property(e => e.EntryDateTime)
+                .HasDefaultValueSql("getdate()");
+
+            modelBuilder.Entity<ExpenseLogEntry>()
+                .Property(e => e.EntryDateTime)
+                .HasDefaultValueSql("getdate()");
+
+            modelBuilder.Entity<Payment>()
                 .Property(e => e.EntryDateTime)
                 .HasDefaultValueSql("getdate()");
         }

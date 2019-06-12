@@ -1,5 +1,7 @@
 ﻿@page "/bills"
 @using BudgetPad.Shared.Dtos
+@using BudgetPad.Shared.Dtos.DtoExtensions
+@using BudgetPad.Client.Pages.Payments
 @inject HttpClient Http
 @inject IModalService Modal
 
@@ -22,6 +24,9 @@ else
                             <h3 class="card-title text-md-left">@bill.ShortName</h3>
                             <h6 class="card-subtitle text-left text-info">@bill.BudgetCategory.ShortName</h6>
                         </div>
+                        <div class="col text-right">
+                            <button type="button" class="bnt btn-sm btn-primary" onclick="@(() => AddPayment(bill.Id))"><i class="oi oi-credit-card"></i> Make Payment</button>
+                        </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col text-md-left">
@@ -33,12 +38,6 @@ else
                             <span class="card-text text-muted text-sm-left">Due Date:</span>
                         </div>
                         <div class="col">
-                            @if (bill.AmountSpent == bill.AmountPlanned)
-                            {
-                                <span class="card-text text-info">
-                                    Paid: @bill.DatePaid.ToShortDateString()
-                                </span>
-                            }
                             <span class="card-text @(bill.DueDate <= DateTime.Now ? "text-danger" : "text-dark")">
                                 @bill.DueDate.ToShortDateString()
                             </span>
@@ -49,7 +48,18 @@ else
                             <span class="card-text text-muted text-sm-left">Budgeted:</span>
                         </div>
                         <div class="col">
-                            <span class="card-text text-dark">$@bill.AmountPlanned</span>
+                            <span class="card-text text-dark">@bill.AmountPlanned.ToString("C")</span>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm">
+                            <span class="card-text text-muted" text-sm-left">Paid:</span>
+                        </div>
+                        <div class="col-sm">
+                            <span class="card-text text-dark">@bill.TotalPaid.ToString("C")</span>
+                        </div>
+                        <div class="col-sm">
+                            <span class="card-text text-dark"><button type="button" class="btn btn-link" onclick="@(() => ShowPaymentHistory(bill.Payments))">History</button></span>
                         </div>
                     </div>
                     @if (bill.CompanyName != null)
@@ -74,8 +84,7 @@ else
                             </div>
                         </div>
                     }
-
-                </div>
+                    </div>
                 <div class="card-footer text-center">
                     <button class="btn btn-sm btn-light" onclick="@(() => EditBill(bill.Id))"><i class="oi oi-pencil" /></button>
                     <button class="btn btn-sm btn-light" onclick="@(() => DeleteBill(bill.Id, bill.ShortName))"><i class="oi oi-delete" /></button>
@@ -86,11 +95,11 @@ else
 }
 
 @functions{
-    BillDto[] bills;
+    BillDtoExtension[] bills;
 
     protected override async Task OnInitAsync()
     {
-        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeCategories=true&includeTotalPaid=true");
     }
 
     private void AddBill()
@@ -118,10 +127,28 @@ else
         Modal.OnClose += RefreshBills;
     }
 
-     private async void RefreshBills(ModalResult a)
+    private async void RefreshBills(ModalResult a)
     {
-        bills = await Http.GetJsonAsync<BillDto[]>("api/Bills?includeCategories=true");
+        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeCategories=true&includeTotalPaid=true");
         this.StateHasChanged();
         Modal.OnClose -= RefreshBills;
+    }
+
+    private void AddPayment(Guid id)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("billId", id);
+
+        Modal.Show("Make Payment", typeof(AddPayment), parameters);
+        Modal.OnClose += RefreshBills;
+    }
+
+    private void ShowPaymentHistory(IEnumerable<PaymentDto> payments)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("payments", payments);
+
+        Modal.Show("Payment History", typeof(PaymentHistory), parameters);
+        Modal.OnClose += RefreshBills;
     }
 }
