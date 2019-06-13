@@ -197,11 +197,11 @@ namespace BudgetPad.Server.Controllers.Bills
 
             var paymentsFromRepo = await _context.Bills
                 .Where(b => b.Id == billId)
-                .Include(p => p.Payments)
                 .Select(p => p.Payments)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
+                
 
-            var paymentsToReturn = Mapper.Map<IEnumerable<PaymentForListDto>>(paymentsFromRepo);
+            var paymentsToReturn = Mapper.Map<IList<PaymentDto>>(paymentsFromRepo);
 
             return Ok(paymentsToReturn);
         }

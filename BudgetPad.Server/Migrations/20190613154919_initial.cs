@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BudgetPad.Server.Migrations
 {
-    public partial class inital : Migration
+    public partial class initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -73,28 +73,6 @@ namespace BudgetPad.Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExpenseLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    BudgetId = table.Column<Guid>(nullable: true),
-                    BudgetCategoryId = table.Column<Guid>(nullable: false),
-                    EntryDateTime = table.Column<DateTime>(nullable: false, defaultValueSql: "getdate()"),
-                    RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true),
-                    Remarks = table.Column<string>(maxLength: 200, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ExpenseLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ExpenseLogs_Categories_BudgetCategoryId",
-                        column: x => x.BudgetCategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "UnplannedExpenses",
                 columns: table => new
                 {
@@ -125,7 +103,6 @@ namespace BudgetPad.Server.Migrations
                     EntryDateTime = table.Column<DateTime>(nullable: false, defaultValueSql: "getdate()"),
                     RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true),
                     BillId = table.Column<Guid>(nullable: true),
-                    ExpenseLogEntryId = table.Column<Guid>(nullable: true),
                     UnplannedExpenseId = table.Column<Guid>(nullable: true)
                 },
                 constraints: table =>
@@ -138,17 +115,33 @@ namespace BudgetPad.Server.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Payments_ExpenseLogs_ExpenseLogEntryId",
-                        column: x => x.ExpenseLogEntryId,
-                        principalTable: "ExpenseLogs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_Payments_UnplannedExpenses_UnplannedExpenseId",
                         column: x => x.UnplannedExpenseId,
                         principalTable: "UnplannedExpenses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExpenseLogs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    PaymentId = table.Column<Guid>(nullable: false),
+                    ExpenseId = table.Column<Guid>(nullable: false),
+                    EntryDateTime = table.Column<DateTime>(nullable: false, defaultValueSql: "getdate()"),
+                    RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true),
+                    Remarks = table.Column<string>(maxLength: 200, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExpenseLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExpenseLogs_Payments_PaymentId",
+                        column: x => x.PaymentId,
+                        principalTable: "Payments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -162,19 +155,14 @@ namespace BudgetPad.Server.Migrations
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExpenseLogs_BudgetCategoryId",
+                name: "IX_ExpenseLogs_PaymentId",
                 table: "ExpenseLogs",
-                column: "BudgetCategoryId");
+                column: "PaymentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_BillId",
                 table: "Payments",
                 column: "BillId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Payments_ExpenseLogEntryId",
-                table: "Payments",
-                column: "ExpenseLogEntryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_UnplannedExpenseId",
@@ -190,13 +178,13 @@ namespace BudgetPad.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ExpenseLogs");
+
+            migrationBuilder.DropTable(
                 name: "Payments");
 
             migrationBuilder.DropTable(
                 name: "Bills");
-
-            migrationBuilder.DropTable(
-                name: "ExpenseLogs");
 
             migrationBuilder.DropTable(
                 name: "UnplannedExpenses");

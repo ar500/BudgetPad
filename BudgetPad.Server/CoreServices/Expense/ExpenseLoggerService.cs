@@ -3,6 +3,7 @@ using BudgetPad.Shared;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using AutoMapper;
+using System.Linq;
 
 namespace BudgetPad.Server.CoreServices.Expense
 {
@@ -19,12 +20,20 @@ namespace BudgetPad.Server.CoreServices.Expense
 
         public async Task<ExpenseLogEntry> LogExpense<T>(T expense, string remarks = null) where T : ExpenseBase
         {
-            var logEntry = Mapper.Map<ExpenseLogEntry>(expense);
+            var paymentToLog = expense.Payments
+                .OrderByDescending(e => e.EntryDateTime)
+                .FirstOrDefault();
 
-            if(logEntry == null)
+            if(paymentToLog == null)
             {
                 return null;
             }
+
+            var logEntry = new ExpenseLogEntry
+            {
+                Payment = paymentToLog,
+                ExpenseId = expense.Id
+            };
 
             if (remarks != null)
             {

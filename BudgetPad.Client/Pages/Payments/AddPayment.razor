@@ -1,12 +1,11 @@
-﻿@page "/addpayment"
-@using BudgetPad.Shared.Dtos
+﻿@using BudgetPad.Shared.Dtos
 @inject HttpClient Http
 @inject IModalService Modal
 
 <EditForm Model="@payment" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
     <DataAnnotationsValidator />
     <DxFormLayout>
-        <DxFormLayoutItem Caption="Date Paied" ColSpanMd="6">
+        <DxFormLayoutItem Caption="Date Paid" ColSpanMd="6">
             <Template>
                 <DxDateEdit bind-Date=@payment.DatePaid></DxDateEdit>
             </Template>

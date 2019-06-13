@@ -1,9 +1,15 @@
-﻿@page "/paymenthistory"
-@using BudgetPad.Shared.Dtos
+﻿@using BudgetPad.Shared.Dtos
 @inject HttpClient Http
 @inject IModalService Modal
 
-    <DxDataGrid Data=@Payments PageSize=5 CssClass="text-center">
+<DxDataGrid Data=@Payments
+            ref=@grid
+            PageSize=5
+            RowRemoving=@((payment) => OnDelete(payment.Id))
+            RowInsertStart=@(() => OnRowEditStarting(null))
+            RowEditStart=@((payment) => OnRowEditStarting(payment))
+            CssClass="text-center">
+    <ChildContent>
         <DxDataGridCommandColumn Width="150px"></DxDataGridCommandColumn>
         <DxDataGridDateEditColumn Field=@nameof(PaymentDto.DatePaid) Caption="Date Paid"></DxDataGridDateEditColumn>
         <DxDataGridSpinEditColumn Field=@nameof(PaymentDto.AmountPaid) Caption="Amount Paid">
@@ -12,16 +18,128 @@
             </DisplayTemplate>
         </DxDataGridSpinEditColumn>
         <DxDataGridDateEditColumn Field=@nameof(PaymentDto.EntryDateTime) Caption="Date Entered"></DxDataGridDateEditColumn>
-    </DxDataGrid>
+    </ChildContent>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
+            <DataAnnotationsValidator />
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Date Paid" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxDateEdit bind-Date=@EditContext.DatePaid></DxDateEdit>
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem Caption="Amount" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxSpinEdit bind-Value="@EditContext.AmountPaid"></DxSpinEdit>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <ValidationSummary />
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="dxbs-fl-ctrl dxbs-fl-ctrl-nc text-right">
+                            <button type="submit" class="btn btn-link">Save</button>
+                            <button type="button" class="btn btn-link" onclick=@OnCancelButtonClick>Cancel</button>
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
 
 @functions{
     [CascadingParameter]
     private ModalParameters ModalParameters { get; set; }
 
+    private Guid BillId { get; set; }
+
+    DxDataGrid<PaymentDto> grid;
     private IEnumerable<PaymentDto> Payments;
 
     protected override void OnInit()
     {
         Payments = ModalParameters.Get<IEnumerable<PaymentDto>>("payments");
+        BillId = ModalParameters.Get<Guid>("billId");
+    }
+
+    private void OnDelete(Guid id)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("paymentId", id);
+
+        Modal.Show("Are you sure?", typeof(DeletePayment), parameters);
+        Modal.OnClose += (ModalResult e) => StateHasChanged();
+    }
+
+    FormEditContext EditContext = null;
+    private void OnRowEditStarting(PaymentDto payment)
+    {
+        EditContext = new FormEditContext(payment);
+        EditContext.StateHasChanged += () => { StateHasChanged(); };
+    }
+
+    private void OnCancelButtonClick()
+    {
+        EditContext = null;
+        grid.CancelRowEdit();
+    }
+
+    private async void HandleValidSubmit()
+    {
+        EditContext.DataItem.DatePaid = EditContext.DatePaid;
+        EditContext.DataItem.AmountPaid = EditContext.AmountPaid;
+
+        if (EditContext.IsNewRow)
+        {
+            await Http.SendJsonAsync(HttpMethod.Post, "api/bills/AddPayment/" + BillId, EditContext.DataItem);
+            Payments = await Http.GetJsonAsync<IEnumerable<PaymentDto>>("api/bills/GetPayments/" + BillId);
+            this.StateHasChanged();
+        }
+        else
+        {
+            await Http.SendJsonAsync(HttpMethod.Put, "api/bills/UpdatePayment/" + EditContext.Id.Value, EditContext.DataItem);
+        }
+
+        EditContext = null;
+        grid.CancelRowEdit();
+    }
+
+    class FormEditContext
+    {
+        public FormEditContext(PaymentDto dataItem)
+        {
+            DataItem = dataItem;
+            if (DataItem == null)
+            {
+                DataItem = new PaymentDto();
+                DataItem.DatePaid = DateTime.Now;
+                IsNewRow = true;
+            }
+            else
+            {
+                Id = dataItem.Id;
+                IsNewRow = false;
+            }
+            DatePaid = DataItem.DatePaid;
+            AmountPaid = DataItem.AmountPaid;
+        }
+
+        public PaymentDto DataItem { get; set; }
+        public bool IsNewRow { get; set; }
+
+        public Guid? Id { get; set; }
+
+        public DateTime DatePaid { get; set; }
+
+        public decimal AmountPaid { get; set; }
+
+        public Action StateHasChanged { get; set; }
     }
 }

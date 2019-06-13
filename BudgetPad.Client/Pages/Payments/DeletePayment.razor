@@ -3,7 +3,7 @@
 @inject IModalService Modal
 
 <div class="alert alert-danger" role="alert">
-    Are you sure that you want to delete @shortName<br />
+    Are you sure that you want to delete this payment?<br />
     <button class="btn btn-danger" onclick="@(() => Delete())">Delete</button>
     <button class="btn btn-secondary" onclick="@(() => Cancel())">Cancel</button>
 </div>
@@ -11,20 +11,17 @@
 @functions{
     [CascadingParameter] ModalParameters Parameters { get; set; }
 
-    private Guid budgetId { get; set; }
-
-    private string shortName { get; set; }
+    private Guid paymentId { get; set; }
 
     protected override void OnInit()
     {
-        budgetId = Parameters.Get<Guid>("budgetId");
-        shortName = Parameters.Get<string>("shortName");
+        paymentId = Parameters.Get<Guid>("paymentId");
     }
 
     private async Task Delete()
     {
-        await Http.DeleteAsync("api/budgets/" + budgetId);
-        Modal.Close(ModalResult.Ok($"the Bill {shortName} was deleted successfully."));
+        await Http.DeleteAsync("api/bills/DeletePayment/" + paymentId);
+        Modal.Close(ModalResult.Ok($"The payment {paymentId} was deleted successfully."));
     }
 
     private void Cancel()

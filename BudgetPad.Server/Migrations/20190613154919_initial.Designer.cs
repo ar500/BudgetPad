@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetPad.Server.Migrations
 {
     [DbContext(typeof(BudgetPadContext))]
-    [Migration("20190610160430_inital")]
-    partial class inital
+    [Migration("20190613154919_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -124,13 +124,13 @@ namespace BudgetPad.Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid>("BudgetCategoryId");
-
-                    b.Property<Guid?>("BudgetId");
-
                     b.Property<DateTime>("EntryDateTime")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasDefaultValueSql("getdate()");
+
+                    b.Property<Guid>("ExpenseId");
+
+                    b.Property<Guid>("PaymentId");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(200);
@@ -141,7 +141,7 @@ namespace BudgetPad.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BudgetCategoryId");
+                    b.HasIndex("PaymentId");
 
                     b.ToTable("ExpenseLogs");
                 });
@@ -162,8 +162,6 @@ namespace BudgetPad.Server.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasDefaultValueSql("getdate()");
 
-                    b.Property<Guid?>("ExpenseLogEntryId");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate();
@@ -173,8 +171,6 @@ namespace BudgetPad.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BillId");
-
-                    b.HasIndex("ExpenseLogEntryId");
 
                     b.HasIndex("UnplannedExpenseId");
 
@@ -220,9 +216,9 @@ namespace BudgetPad.Server.Migrations
 
             modelBuilder.Entity("BudgetPad.Shared.ExpenseLogEntry", b =>
                 {
-                    b.HasOne("BudgetPad.Shared.BudgetCategory", "BudgetCategory")
+                    b.HasOne("BudgetPad.Shared.Payment", "Payment")
                         .WithMany()
-                        .HasForeignKey("BudgetCategoryId")
+                        .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -232,10 +228,6 @@ namespace BudgetPad.Server.Migrations
                     b.HasOne("BudgetPad.Shared.Bill", null)
                         .WithMany("Payments")
                         .HasForeignKey("BillId");
-
-                    b.HasOne("BudgetPad.Shared.ExpenseLogEntry", null)
-                        .WithMany("Payments")
-                        .HasForeignKey("ExpenseLogEntryId");
 
                     b.HasOne("BudgetPad.Shared.UnplannedExpense", null)
                         .WithMany("Payments")

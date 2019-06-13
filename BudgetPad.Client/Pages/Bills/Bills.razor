@@ -4,8 +4,7 @@
 @using BudgetPad.Client.Pages.Payments
 @inject HttpClient Http
 @inject IModalService Modal
-
-<h1>Bills</h1>
+@inject IJSRuntime JsRuntime
 
 @if (bills == null)
 {
@@ -13,83 +12,154 @@
 }
 else
 {
-    <button class="btn btn-primary btn-sm" type="button" onclick="@(() => AddBill())"><i class="oi oi-plus"></i>Add Bill</button>
+    <button class="btn btn-primary btn-sm" type="button" onclick="@(() => AddBill())"><i class="oi oi-plus"></i> Add Bill</button>
     <div class="card-columns mt-3">
         @foreach (var bill in bills)
         {
-            <div class="card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col">
-                            <h3 class="card-title text-md-left">@bill.ShortName</h3>
-                            <h6 class="card-subtitle text-left text-info">@bill.BudgetCategory.ShortName</h6>
-                        </div>
-                        <div class="col text-right">
-                            <button type="button" class="bnt btn-sm btn-primary" onclick="@(() => AddPayment(bill.Id))"><i class="oi oi-credit-card"></i> Make Payment</button>
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs">
+                    <li class="card-nav-item">
+                        <button type="button" class="btn btn-link nav-link active">Summary</button>
+                    </li>
+                    <li class="card-nav-item">
+                        <button type="button" class="btn btn-link nav-link" data-toggle="dropdown" onclick="@(() => AddPayment(bill.Id))">Add Payment</button>
+                    </li>
+                    <li class="card-nav-item">
+                        <button type="button" class="btn btn-link nav-link" data-toggle="dropdown" onclick="@(() => ShowPaymentHistory(bill.Payments, bill.Id))">Payment History</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h3 class="card-title text-md-left">@bill.ShortName</h3>
+                        <h6 class="card-subtitle text-left text-info">@bill.BudgetCategory.ShortName</h6>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col text-md-left">
+                        <p class="card-text">@bill.Description</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col text-md-left">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <span class="text-muted text-sm-left">Time</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="text-sm-left">Due:</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="card-text text-right @(bill.DueDate <= DateTime.Now ? "text-danger" : "text-dark")">
+                                            @bill.DueDate.ToShortDateString()
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="text-sm-left">Days Remaining:</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="card-text text-right @(bill.DueDate <= DateTime.Now ? "text-danger" : "text-dark")">
+                                            @CalcDaysRemaining(bill.DueDate)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col text-md-left">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <span class="text-muted text-sm-left">Funds</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="text-sm-left">Planned:</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="card-text text-right">
+                                            @bill.AmountPlanned.ToString("C")
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="text-sm-left">Paid:</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="card-text text-right @(bill.TotalPaid > bill.AmountPlanned ? "text-danger" : "text-dark")">
+                                            @bill.TotalPaid.ToString("C")
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <span class="text-sm-left">Remaining:</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="card-text text-right @(bill.TotalPaid > bill.AmountPlanned ? "text-danger" : "text-dark")">
+                                            @CalcRemainingFunds(bill.AmountPlanned, bill.TotalPaid).ToString("C")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @if (bill.CompanyName != null)
+                {
                     <div class="row mt-3">
                         <div class="col text-md-left">
-                            <p class="card-text">@bill.Description</p>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-sm">
-                            <span class="card-text text-muted text-sm-left">Due Date:</span>
-                        </div>
-                        <div class="col">
-                            <span class="card-text @(bill.DueDate <= DateTime.Now ? "text-danger" : "text-dark")">
-                                @bill.DueDate.ToShortDateString()
-                            </span>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-sm">
-                            <span class="card-text text-muted text-sm-left">Budgeted:</span>
-                        </div>
-                        <div class="col">
-                            <span class="card-text text-dark">@bill.AmountPlanned.ToString("C")</span>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-sm">
-                            <span class="card-text text-muted" text-sm-left">Paid:</span>
-                        </div>
-                        <div class="col-sm">
-                            <span class="card-text text-dark">@bill.TotalPaid.ToString("C")</span>
-                        </div>
-                        <div class="col-sm">
-                            <span class="card-text text-dark"><button type="button" class="btn btn-link" onclick="@(() => ShowPaymentHistory(bill.Payments))">History</button></span>
-                        </div>
-                    </div>
-                    @if (bill.CompanyName != null)
-                    {
-                        <div class="row mt-3">
-                            <div class="col-sm">
-                                <span class="card-text text-muted text-sm-left">Company:</span>
-                            </div>
-                            <div class="col">
-                                <span class="card-text text-dark">@bill.CompanyName</span>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <span class="text-muted text-sm-left">Details</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <span class="text-sm-left">Company Name:</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="card-text text-right">
+                                                @bill.CompanyName
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <span class="text-sm-left">Account Number:</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="card-text text-right">
+                                                @bill.PayoutAccountNumber
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    }
-                    @if (bill.PayoutAccountNumber != null)
-                    {
-                        <div class="row mt-3">
-                            <div class="col-sm">
-                                <span class="card-text text-muted text-sm-left">Account No:</span>
-                            </div>
-                            <div class="col">
-                                <span class="card-text text-dark">@bill.PayoutAccountNumber</span>
-                            </div>
-                        </div>
-                    }
                     </div>
-                <div class="card-footer text-center">
-                    <button class="btn btn-sm btn-light" onclick="@(() => EditBill(bill.Id))"><i class="oi oi-pencil" /></button>
-                    <button class="btn btn-sm btn-light" onclick="@(() => DeleteBill(bill.Id, bill.ShortName))"><i class="oi oi-delete" /></button>
-                </div>
+                }
             </div>
+            <div class="card-footer text-center">
+                <button class="btn btn-sm btn-light" onclick="@(() => EditBill(bill.Id))"><i class="oi oi-pencil" /></button>
+                <button class="btn btn-sm btn-light" onclick="@(() => DeleteBill(bill.Id, bill.ShortName))"><i class="oi oi-delete" /></button>
+            </div>
+        </div>
         }
     </div>
 }
@@ -143,12 +213,23 @@ else
         Modal.OnClose += RefreshBills;
     }
 
-    private void ShowPaymentHistory(IEnumerable<PaymentDto> payments)
+    private void ShowPaymentHistory(IEnumerable<PaymentDto> payments, Guid billId)
     {
         var parameters = new ModalParameters();
         parameters.Add("payments", payments);
+        parameters.Add("billId", billId);
 
         Modal.Show("Payment History", typeof(PaymentHistory), parameters);
         Modal.OnClose += RefreshBills;
+    }
+
+    private int CalcDaysRemaining(DateTime dueDate)
+    {
+        return (int)(dueDate - DateTime.Now).TotalDays;
+    }
+
+    private decimal CalcRemainingFunds(decimal planned, decimal actual)
+    {
+        return planned - actual;
     }
 }
