@@ -7,10 +7,6 @@ using System.Threading.Tasks;
 
 namespace BudgetPad.Server.DataAccess.Repositories
 {
-    public interface IExpenseRepositry : IGenericRepository<ExpenseLogEntry>
-    {
-        ExpenseLogEntry GetLogByPayment(Guid paymentId);
-    }
     public class ExpenseRepository : GenericRepository<ExpenseLogEntry>, IExpenseRepositry
     {
         public ExpenseRepository(BudgetPadContext context, ILogger<ExpenseRepository> logger)

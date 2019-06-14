@@ -9,6 +9,7 @@ using BudgetPad.Shared;
 using AutoMapper;
 using BudgetPad.Shared.Dtos;
 using BudgetPad.Shared.Dtos.DtoExtensions;
+using BudgetPad.Server.DataAccess.Repositories;
 
 namespace BudgetPad.Server.Controllers.Budgets
 {
@@ -18,29 +19,29 @@ namespace BudgetPad.Server.Controllers.Budgets
     public class BudgetsController : ControllerBase
     {
         private readonly BudgetPadContext _context;
+        private readonly IBudgetRepository _budgetRepository;
+        private readonly IBillRepository _billRepository;
 
-        public BudgetsController(BudgetPadContext context)
+        public BudgetsController(BudgetPadContext context, IBudgetRepository budgetRepository, IBillRepository billRepository)
         {
             _context = context;
+            _budgetRepository = budgetRepository;
+            _billRepository = billRepository;
         }
 
         // GET: api/Budgets
         [HttpGet]
         public async Task<IActionResult> GetBudgets(bool includeBills = false)
         {
-            List<Budget> budgetsFromRepo;
+            IEnumerable<Budget> budgetsFromRepo;
 
             if (includeBills)
             {
-                budgetsFromRepo = await _context.Budgets
-                    .Include(b => b.Bills)
-                    .ThenInclude(c => c.BudgetCategory)
-                    .ToListAsync();
+                budgetsFromRepo = _budgetRepository.GetBudgets();
             }
             else
             {
-                budgetsFromRepo = await _context.Budgets
-                    .ToListAsync();
+                budgetsFromRepo = _budgetRepository.GetAllDirectNav(false);
             }
 
             var budgetsToReturn = Mapper.Map<IEnumerable<BudgetDtoExtension>>(budgetsFromRepo);
@@ -52,10 +53,7 @@ namespace BudgetPad.Server.Controllers.Budgets
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudget(Guid id)
         {
-            var budget = await _context.Budgets
-                .Include(b => b.Bills)
-                .ThenInclude(c => c.BudgetCategory)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var budget = await _budgetRepository.GetBudget(id);
 
             if (budget == null)
             {
@@ -76,25 +74,16 @@ namespace BudgetPad.Server.Controllers.Budgets
                 return BadRequest();
             }
 
-            if (!BudgetExists(id))
+            if (!await _budgetRepository.EntryExists(id))
             {
                 return NotFound();
             }
 
-            var budgetToUpdate = await _context.Budgets.FindAsync(id);
+            var budgetToUpdate = await _budgetRepository.GetById(id);
 
             var updatedBudget = Mapper.Map(budget, budgetToUpdate);
 
-            _context.Entry(updatedBudget).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+            await _budgetRepository.Update(id, updatedBudget);
 
             return NoContent();
         }
@@ -108,16 +97,12 @@ namespace BudgetPad.Server.Controllers.Budgets
                 return BadRequest(ModelState);
             }
 
-            var billsToAttach = await _context.Bills
-                .Include(b => b.BudgetCategory)
-                .Where(e => budget.ReturnedBillNames.Contains(e.ShortName))
-                .ToListAsync();
+            var billsToAttach = _billRepository.GetBillsFromNameList(budget.ReturnedBillNames);
 
             var budgetToCreate = Mapper.Map<Budget>(budget);
             budgetToCreate.Bills = billsToAttach;
 
-            _context.Budgets.Add(budgetToCreate);
-            await _context.SaveChangesAsync();
+            await _budgetRepository.Create(budgetToCreate);
 
             return CreatedAtAction("GetBudget", new { id = budget.Id }, budget);
         }
@@ -126,14 +111,12 @@ namespace BudgetPad.Server.Controllers.Budgets
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(Guid id)
         {
-            var budget = await _context.Budgets.FindAsync(id);
-            if (budget == null)
+            if(!await _budgetRepository.EntryExists(id))
             {
-                return NotFound();
+                return NoContent();
             }
 
-            _context.Budgets.Remove(budget);
-            await _context.SaveChangesAsync();
+            await _budgetRepository.Delete(id);
 
             return NoContent();
         }
@@ -141,25 +124,19 @@ namespace BudgetPad.Server.Controllers.Budgets
         [HttpPost("[action]/{budgetId}")]
         public async Task<IActionResult> UpdateBills(Guid budgetId, [FromBody] List<Guid> billIds)
         {
-            if (!BudgetExists(budgetId))
+            if (!await _budgetRepository.EntryExists(budgetId))
             {
                 return BadRequest();
             }
 
-            var budgetToUpdate = await _context.Budgets
-                .Include(b => b.Bills)
-                .ThenInclude(c => c.BudgetCategory)
-                .FirstOrDefaultAsync(b => b.Id == budgetId);
+            var budgetToUpdate = await _budgetRepository.GetBudget(budgetId);
 
             if(budgetToUpdate == null)
             {
                 return NotFound();
             }
 
-            var billsFromUser = await _context.Bills
-                .Where(bill => billIds.Contains(bill.Id))
-                .Include(c => c.BudgetCategory)
-                .ToListAsync();
+            var billsFromUser = _billRepository.GetBillsFromIdList(billIds);
 
             foreach(var bill in billsFromUser) // for every bill that the user wants to add
             {
@@ -172,23 +149,9 @@ namespace BudgetPad.Server.Controllers.Budgets
             // Now we can intersect the list to remove the bills that were removed
             budgetToUpdate.Bills = budgetToUpdate.Bills.Intersect(billsFromUser).ToList();
 
-            _context.Entry(budgetToUpdate).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw;
-            }
+            await _budgetRepository.Update(budgetToUpdate.Id, budgetToUpdate);
 
             return NoContent();
-        }
-
-        private bool BudgetExists(Guid id)
-        {
-            return _context.Budgets.Any(e => e.Id == id);
         }
     }
 }

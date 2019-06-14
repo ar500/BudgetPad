@@ -1,5 +1,6 @@
 ﻿using BudgetPad.Shared;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
