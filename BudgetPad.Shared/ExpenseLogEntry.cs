@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BudgetPad.Shared
 {
-    public class ExpenseLogEntry 
+    public class ExpenseLogEntry : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

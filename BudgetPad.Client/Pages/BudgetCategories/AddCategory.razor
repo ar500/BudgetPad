@@ -1,4 +1,4 @@
-﻿@using BudgetPad.Shared
+﻿@using BudgetPad.Shared.Dtos
 @inject IModalService Modal
 @inject HttpClient Http
 
@@ -18,7 +18,7 @@
 </EditForm>
 
 @functions {
-    private BudgetCategory budgetCategory = new BudgetCategory();
+    private BudgetCategoryDto budgetCategory = new BudgetCategoryDto();
 
     private async Task HandleValidSubmit()
     {

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BudgetPad.Shared
 {
-    public class Bill : ExpenseBase
+    public class Bill : ExpenseBase, IEntity
     {
         [Required]
         [MaxLength(50)]

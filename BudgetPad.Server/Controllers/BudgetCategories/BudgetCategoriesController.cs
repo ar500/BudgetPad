@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using BudgetPad.Server.DataAccess;
 using BudgetPad.Shared;
 using BudgetPad.Shared.Dtos;
+using BudgetPad.Server.DataAccess.Repositories;
 
 namespace BudgetPad.Server.Controllers.BudgetCategories
 {
@@ -16,34 +17,36 @@ namespace BudgetPad.Server.Controllers.BudgetCategories
     [ApiController]
     public class BudgetCategoriesController : ControllerBase
     {
-        private readonly BudgetPadContext _context;
+        private readonly ICategoryRepository _repository;
 
-        public BudgetCategoriesController(BudgetPadContext context)
+        public BudgetCategoriesController(ICategoryRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/BudgetCategories
         [HttpGet("[action]")]
-        public async Task<IEnumerable<BudgetCategoryDto>> GetCategories()
+        public IEnumerable<BudgetCategoryDto> GetCategories()
         {
-            var categoriesFromRepo = await _context.Categories.ToListAsync();
+            var categoriesFromRepo = _repository.GetAllDirectNav(false);
 
             return Mapper.Map<IEnumerable<BudgetCategoryDto>>(categoriesFromRepo);
         }
 
         // GET: api/BudgetCategories/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<BudgetCategory>> GetBudgetCategory(Guid id)
+        public async Task<ActionResult<BudgetCategoryDto>> GetBudgetCategory(Guid id)
         {
-            var budgetCategory = await _context.Categories.FindAsync(id);
+            var budgetCategory = await _repository.GetById(id);
 
             if (budgetCategory == null)
             {
                 return NotFound();
             }
 
-            return budgetCategory;
+            var categoryToReturn = Mapper.Map<BudgetCategoryDto>(budgetCategory);
+
+            return categoryToReturn;
         }
 
         // PUT: api/BudgetCategories/5
@@ -55,58 +58,43 @@ namespace BudgetPad.Server.Controllers.BudgetCategories
                 return BadRequest();
             }
 
-            if (!BudgetCategoryExists(id))
+            if (!await _repository.EntryExists(id))
             {
                 return NotFound();
             }
 
-            var categoryFromRepo = _context.Categories.Find(id);
-            
-            var categoryToUpdate = Mapper.Map(budgetCategory, categoryFromRepo);
-
-            _context.Entry(categoryToUpdate).State = EntityState.Modified;
-
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+
+            var categoryToUpdate = await _repository.GetById(id);
+
+            Mapper.Map(budgetCategory, categoryToUpdate);
+
+            await _repository.Update(id, categoryToUpdate);
 
             return NoContent();
         }
 
         // POST: api/BudgetCategories
         [HttpPost]
-        public async Task<ActionResult<BudgetCategory>> PostBudgetCategory(BudgetCategory budgetCategory)
+        public async Task<IActionResult> PostBudgetCategory(BudgetCategoryDto budgetCategory)
         {
-            _context.Categories.Add(budgetCategory);
-            await _context.SaveChangesAsync();
+            var categoryToCreate = Mapper.Map<BudgetCategory>(budgetCategory);
+
+            await _repository.Create(categoryToCreate);
 
             return CreatedAtAction("GetBudgetCategory", new { id = budgetCategory.Id }, budgetCategory);
         }
 
         // DELETE: api/BudgetCategories/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<BudgetCategory>> DeleteBudgetCategory(Guid id)
+        public async Task<IActionResult> DeleteBudgetCategory(Guid id)
         {
-            var budgetCategory = await _context.Categories.FindAsync(id);
-            if (budgetCategory == null)
-            {
-                return NotFound();
-            }
+            await _repository.Delete(id);
 
-            _context.Categories.Remove(budgetCategory);
-            await _context.SaveChangesAsync();
-
-            return budgetCategory;
-        }
-
-        private bool BudgetCategoryExists(Guid id)
-        {
-            return _context.Categories.Any(e => e.Id == id);
+            return NoContent();
         }
     }
 }

@@ -10,18 +10,20 @@
 }
 else
 {
-    <div class="row">
-        <div class="col-md-12 text-center border">
-            <p>Quick Links Area</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-9 text-center border">
+                <p>Quick Links Area</p>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-2 text-center border">
-            <p>Sidebar</p>
-        </div>
-        <div class="col-md-10 text-center border">
-            <div class="card-columns">
-                <CategoryBreakdown CategoryGroups=@budget.CategoryGroups/>
+        <div class="row">
+            <div class="col-md-2 text-center border">
+                <p>Sidebar</p>
+            </div>
+            <div class="col-md-8 text-center border">
+                <div class="card-columns">
+                    <CategoryBreakdown CategoryGroups=@budget.CategoryGroups />
+                </div>
             </div>
         </div>
     </div>

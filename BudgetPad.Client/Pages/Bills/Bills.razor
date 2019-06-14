@@ -169,7 +169,7 @@ else
 
     protected override async Task OnInitAsync()
     {
-        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeCategories=true&includeTotalPaid=true");
+        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeNavigationProps=true&includeTotalPaid=true");
     }
 
     private void AddBill()
@@ -199,7 +199,7 @@ else
 
     private async void RefreshBills(ModalResult a)
     {
-        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeCategories=true&includeTotalPaid=true");
+        bills = await Http.GetJsonAsync<BillDtoExtension[]>("api/Bills?includeNavigationProps=true&includeTotalPaid=true");
         this.StateHasChanged();
         Modal.OnClose -= RefreshBills;
     }

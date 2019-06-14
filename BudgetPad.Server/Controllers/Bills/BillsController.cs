@@ -11,6 +11,7 @@ using BudgetPad.Shared.Dtos;
 using Microsoft.Extensions.Logging;
 using BudgetPad.Server.CoreServices.Expense;
 using BudgetPad.Shared.Dtos.DtoExtensions;
+using BudgetPad.Server.DataAccess.Repositories;
 
 namespace BudgetPad.Server.Controllers.Bills
 {
@@ -19,44 +20,33 @@ namespace BudgetPad.Server.Controllers.Bills
     [ApiController]
     public class BillsController : ControllerBase
     {
-        private readonly BudgetPadContext _context;
+        private readonly IBillRepository _billRepository;
+        private readonly ICategoryRepository _categoryRepository;
         private readonly ILogger<BillsController> _logger;
         private readonly IPaymentService _paymentService;
 
-        public BillsController(BudgetPadContext context, ILogger<BillsController> logger, IPaymentService paymentService)
+        public BillsController(IBillRepository billRepository, ICategoryRepository categoryRepository, ILogger<BillsController> logger, IPaymentService paymentService)
         {
-            _context = context;
+            _billRepository = billRepository;
+            _categoryRepository = categoryRepository;
             _logger = logger;
             _paymentService = paymentService;
         }
 
         // GET: api/Bills
         [HttpGet]
-        public async Task<IActionResult> GetBills(bool includeCategories = false, bool includeTotalPaid = false)
+        public async Task<IActionResult> GetBills(bool includeNavigationProps = false, bool includeTotalPaid = false)
         {
-            List<Bill> BillsFromRepo;
-
-            if (includeCategories)
-            {
-                BillsFromRepo = await _context.Bills
-                    .Include(b => b.BudgetCategory)
-                    .Include(p => p.Payments)
-                    .ToListAsync();
-            }
-            else
-            {
-                BillsFromRepo = await _context.Bills
-                    .ToListAsync();
-            }
-
+            var billsFromRepo = await _billRepository.GetAllDirectNav(includeNavigationProps).ToListAsync();
+           
             if (includeTotalPaid)
             {
-                var BillsForUser = Mapper.Map<IEnumerable<BillDtoExtension>>(BillsFromRepo);
+                var BillsForUser = Mapper.Map<IEnumerable<BillDtoExtension>>(billsFromRepo);
                 return Ok(BillsForUser);
             }
             else
             {
-                var BillsForUser = Mapper.Map<IEnumerable<BillDto>>(BillsFromRepo);
+                var BillsForUser = Mapper.Map<IEnumerable<BillDto>>(billsFromRepo);
                 return Ok(BillsForUser);
             }
         }
@@ -65,9 +55,7 @@ namespace BudgetPad.Server.Controllers.Bills
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBill(Guid id)
         {
-            var bill = await _context.Bills
-                .Include(c => c.BudgetCategory)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var bill = await _billRepository.GetById(id, true);
 
             if (bill == null)
             {
@@ -88,7 +76,7 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest();
             }
 
-            if (!BillExists(id))
+            if (!await _billRepository.EntryExists(id))
             {
                 return NotFound();
             }
@@ -98,12 +86,9 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest(ModelState);
             }
 
-            var billFromRepo = await _context.Bills
-                .Include(c => c.BudgetCategory)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var billFromRepo = await _billRepository.GetById(id, true);
 
-            var categoryFromRepo = await _context.Categories
-                .FirstOrDefaultAsync(c => c.ShortName == bill.CategoryName);
+            var categoryFromRepo = _categoryRepository.GetCategoryByName(bill.CategoryName);
 
             if (categoryFromRepo == null)
             {
@@ -113,17 +98,8 @@ namespace BudgetPad.Server.Controllers.Bills
             var billToUpdate = Mapper.Map(bill, billFromRepo);
             billToUpdate.BudgetCategory = categoryFromRepo;
 
-            _context.Entry(billToUpdate).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
-
+            await _billRepository.Update(id, billToUpdate);
+            
             return NoContent();
         }
 
@@ -136,8 +112,7 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest(ModelState);
             }
 
-            var categoryFromRepo = await _context.Categories
-                .FirstOrDefaultAsync(b => b.ShortName == bill.CategoryName);
+            var categoryFromRepo = _categoryRepository.GetCategoryByName(bill.CategoryName);
 
             if (categoryFromRepo == null)
             {
@@ -146,19 +121,8 @@ namespace BudgetPad.Server.Controllers.Bills
 
             var billToAdd = Mapper.Map<Bill>(bill);
             billToAdd.BudgetCategory = categoryFromRepo;
-            
-            _context.Bills.Add(billToAdd);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch(DbUpdateException ex)
-            {
-                _logger.LogError("A DB update exception was caught.");
-                _logger.LogError($"The exception was: {ex.Message}");
-                _logger.LogError($"The exception was: {ex.InnerException}");
-            }
+            await _billRepository.Create(billToAdd);
 
             return CreatedAtAction("GetBill", new { id = bill.Id }, bill);
         }
@@ -167,14 +131,13 @@ namespace BudgetPad.Server.Controllers.Bills
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBill(Guid id)
         {
-            var bill = await _context.Bills.FindAsync(id);
+            var bill = await _billRepository.GetById(id, true);
             if (bill == null)
             {
                 return NotFound();
             }
 
-            _context.Bills.Remove(bill);
-            await _context.SaveChangesAsync();
+            await _billRepository.Delete(id);
 
             var billToReturn = Mapper.Map<BillDto>(bill);
 
@@ -190,16 +153,12 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest();
             }
 
-            if (!BillExists(billId))
+            if (!await _billRepository.EntryExists(billId))
             {
                 return NotFound();
             }
 
-            var paymentsFromRepo = await _context.Bills
-                .Where(b => b.Id == billId)
-                .Select(p => p.Payments)
-                .FirstOrDefaultAsync();
-                
+            var paymentsFromRepo = _billRepository.GetPayments(billId);
 
             var paymentsToReturn = Mapper.Map<IList<PaymentDto>>(paymentsFromRepo);
 
@@ -215,7 +174,7 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest();
             }
 
-            if (!BillExists(billId))
+            if (!await _billRepository.EntryExists(billId))
             {
                 return NotFound();
             }
@@ -225,25 +184,13 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest(ModelState);
             }
 
-            var billFromRepo = await _context.Bills
-                .Include(c => c.BudgetCategory)
-                .Include(p => p.Payments)
-                .FirstOrDefaultAsync(b => b.Id == billId);
+            var billFromRepo = await _billRepository.GetById(billId, true);
 
             var paymentToAdd = Mapper.Map<Payment>(payment);
 
             await _paymentService.AddPaymentAsync(billFromRepo, paymentToAdd);
 
-            _context.Entry(billFromRepo).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw;
-            }
+            await _billRepository.Update(billId, billFromRepo);
 
             return CreatedAtAction("GetPayments", new { billId = billFromRepo.Id }, billFromRepo);
         }
@@ -262,8 +209,7 @@ namespace BudgetPad.Server.Controllers.Bills
                 return BadRequest(ModelState);
             }
 
-            var paymentToUpdate = await _context.Payments
-                .FindAsync(paymentId);
+            var paymentToUpdate = await _paymentService.GetPaymentById(paymentId);
 
             if (paymentToUpdate == null)
             {
@@ -272,16 +218,7 @@ namespace BudgetPad.Server.Controllers.Bills
 
             Mapper.Map(payment, paymentToUpdate);
 
-            _context.Entry(paymentToUpdate).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw;
-            }
+            await _paymentService.UpdatePaymentAsync(paymentId, paymentToUpdate);
 
             return NoContent();
         }
@@ -295,30 +232,9 @@ namespace BudgetPad.Server.Controllers.Bills
                 return NoContent();
             }
 
-            var paymentToRemove = await _context.Payments.FirstOrDefaultAsync(p => p.Id == paymentId);
-
-            if(paymentToRemove == null)
-            {
-                return NoContent();
-            }
-
-            _context.Entry(paymentToRemove).State = EntityState.Deleted;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw;
-            }
+            await _paymentService.DeletePaymentAsync(paymentId);
 
             return NoContent();
-        }
-
-        private bool BillExists(Guid id)
-        {
-            return _context.Bills.Any(e => e.Id == id);
         }
     }
 }

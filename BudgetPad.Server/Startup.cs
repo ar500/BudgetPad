@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using BudgetPad.Shared.Services.BudgetFunds;
 using BudgetPad.Server.CoreServices.Expense;
 using BudgetPad.Server.CoreServices.Mappers;
+using BudgetPad.Server.DataAccess.Repositories;
 
 namespace BudgetPad.Server
 {
@@ -30,6 +31,11 @@ namespace BudgetPad.Server
             services.AddDbContext<BudgetPadContext>(options =>
                 options.UseSqlServer(
                     @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=BudgetPadDb;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"));
+
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IBillRepository, BillRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<IExpenseRepositry, ExpenseRepository>();
 
             services.AddSingleton<IMapperService, MapperService>();
             services.AddSingleton<ICalculateBudgetFundsService, CalculateBudgetFundsService>();
