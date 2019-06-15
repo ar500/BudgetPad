@@ -8,6 +8,11 @@ namespace BudgetPad.Shared.Dtos.DtoExtensions
     {
         public IEnumerable<FundsInCategoryModel> CategoryGroups { get; set; }
 
+        public decimal TotalSpentInBills
+        {
+            get => CalculateTotalSpentBills();
+        }
+
         public decimal AllocatedFunds
         {
             get => CalculateAllocatedFunds();
@@ -38,6 +43,18 @@ namespace BudgetPad.Shared.Dtos.DtoExtensions
         public decimal CalculateUnallocateFunds()
         {
             return base.AllottedFunds - AllocatedFunds;
+        }
+
+        public decimal CalculateTotalSpentBills()
+        {
+            if(base.Bills.Count() == 0)
+            {
+                return 0M;
+            }
+
+            return (from p in this.Bills
+                    from s in p.Payments
+                    select s.AmountPaid).Sum();
         }
     }
 }

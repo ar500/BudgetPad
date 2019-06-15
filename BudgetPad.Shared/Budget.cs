@@ -37,6 +37,8 @@ namespace BudgetPad.Shared
 
         public ICollection<Bill> Bills { get; set; } = new List<Bill>();
 
+        public ICollection<UnplannedExpense> UnplannedExpenses { get; set; } = new List<UnplannedExpense>();
+
         [Timestamp]
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public byte[] RowVersion { get; set; }

@@ -2,14 +2,13 @@
 @using BudgetPad.Shared.Dtos.DtoExtensions
 @inject HttpClient Http
 
-<h1>Budget dashboard</h1>
-<p>@budgetId</p>
 @if (budget == null)
 {
     <span>Loading...</span>
 }
 else
 {
+    <h1>@budget.ShortName - Dashboard</h1>
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-9 text-center border">
@@ -17,12 +16,10 @@ else
             </div>
         </div>
         <div class="row">
-            <div class="col-md-2 text-center border">
-                <p>Sidebar</p>
-            </div>
-            <div class="col-md-8 text-center border">
+            <div class="col border">
                 <div class="card-columns">
                     <CategoryBreakdown CategoryGroups=@budget.CategoryGroups />
+                    <FundsBreakdown Budget=@budget />
                 </div>
             </div>
         </div>

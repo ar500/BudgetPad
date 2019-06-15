@@ -4,14 +4,16 @@ using BudgetPad.Server.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BudgetPad.Server.Migrations
 {
     [DbContext(typeof(BudgetPadContext))]
-    partial class BudgetPadContextModelSnapshot : ModelSnapshot
+    [Migration("20190615222818_addedUnplannedExpenses_to_Budget")]
+    partial class addedUnplannedExpenses_to_Budget
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,9 +166,13 @@ namespace BudgetPad.Server.Migrations
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate();
 
+                    b.Property<Guid?>("UnplannedExpenseId");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BillId");
+
+                    b.HasIndex("UnplannedExpenseId");
 
                     b.ToTable("Payments");
                 });
@@ -184,12 +190,6 @@ namespace BudgetPad.Server.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasDefaultValueSql("getdate()");
 
-                    b.Property<Guid>("PaymentId");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasMaxLength(200);
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate();
@@ -199,8 +199,6 @@ namespace BudgetPad.Server.Migrations
                     b.HasIndex("BudgetCategoryId");
 
                     b.HasIndex("BudgetId");
-
-                    b.HasIndex("PaymentId");
 
                     b.ToTable("UnplannedExpenses");
                 });
@@ -232,6 +230,10 @@ namespace BudgetPad.Server.Migrations
                     b.HasOne("BudgetPad.Shared.Bill", null)
                         .WithMany("Payments")
                         .HasForeignKey("BillId");
+
+                    b.HasOne("BudgetPad.Shared.UnplannedExpense", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("UnplannedExpenseId");
                 });
 
             modelBuilder.Entity("BudgetPad.Shared.UnplannedExpense", b =>
@@ -245,12 +247,6 @@ namespace BudgetPad.Server.Migrations
                     b.HasOne("BudgetPad.Shared.Budget", null)
                         .WithMany("UnplannedExpenses")
                         .HasForeignKey("BudgetId");
-
-                    b.HasOne("BudgetPad.Shared.Payment", "Payment")
-                        .WithMany()
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -20,7 +20,7 @@ namespace BudgetPad.Server.CoreServices.Expense
             _logger = logger;
         }
 
-        public async Task<ExpenseLogEntry> LogExpense<T>(T expense, string remarks = null) where T : ExpenseBase
+        public async Task<ExpenseLogEntry> LogExpense(Bill expense, string remarks = null)
         {
             var paymentToLog = expense.Payments
                 .OrderByDescending(e => e.EntryDateTime)

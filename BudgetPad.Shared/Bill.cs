@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -28,5 +29,6 @@ namespace BudgetPad.Shared
         [MaxLength(100)]
         public string PayoutAccountNumber { get; set; }
 
+        public IList<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

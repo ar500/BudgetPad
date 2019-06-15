@@ -34,5 +34,7 @@ namespace BudgetPad.Shared.Dtos
         public string OwnerEmail { get; set; }
 
         public ICollection<BillDto> Bills { get; set; }
+
+        public ICollection<UnplannedExpenseDto> UnplannedExpenses { get; set; }
     }
 }

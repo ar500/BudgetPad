@@ -1,10 +1,9 @@
 ﻿@using BudgetPad.Shared.Services.BudgetFunds
-@inject IModalService Modal
 @inject HttpClient Http
 
-<div class="card">
+<div class="card" style="width: 18rem;">
     <div class="card-header">
-        <span class="text-muted text-sm-left align-text-bottom">Category Breakdown</span>
+        <span class="text-muted text-sm-left align-text-bottom">Allocated To Category</span>
     </div>
     <div class="card-body">
         <div class="row">
@@ -17,14 +16,11 @@
         @foreach (var category in CategoryGroups)
         {
             <div class="row mb-0">
-                <div class="col-md-4">
+                <div class="col-md">
                     <span class="card-text text-dark">@category.Category</span>
                 </div>
-                <div class="col-md-4 text-dark">
+                <div class="col-md text-dark">
                     <span class="card-text">@category.TotalFunds.ToString("C")</span>
-                </div>
-                <div class="col-md-4 text-md-center">
-                    <p>Histogram1</p>
                 </div>
             </div>
         }

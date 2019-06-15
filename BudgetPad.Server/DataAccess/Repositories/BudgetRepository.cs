@@ -27,7 +27,13 @@ namespace BudgetPad.Server.DataAccess.Repositories
         {
             return _context.Budgets
                 .Include(b => b.Bills)
-                .ThenInclude(c => c.BudgetCategory)
+                    .ThenInclude(c => c.BudgetCategory)
+                .Include(b => b.Bills)
+                    .ThenInclude(p => p.Payments)
+                .Include(b => b.UnplannedExpenses)
+                    .ThenInclude(c => c.BudgetCategory)
+                .Include(b => b.UnplannedExpenses)
+                    .ThenInclude(c => c.Payment)
                 .AsQueryable();
         }
     }

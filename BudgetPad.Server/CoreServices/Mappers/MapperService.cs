@@ -21,6 +21,7 @@ namespace BudgetPad.Server.CoreServices.Mappers
             {
                 MapCategory(cfg);
                 MapBill(cfg);
+                MapUnplannedExpense(cfg);
                 MapBudget(cfg);
                 MapPayment(cfg);
                 MapExpenses(cfg);
@@ -46,6 +47,14 @@ namespace BudgetPad.Server.CoreServices.Mappers
 
             cfg.CreateMap<BillDtoExtension, Bill>();
             cfg.CreateMap<BillDtoExtension, Bill>().ReverseMap();
+
+            return cfg;
+        }
+
+        private IMapperConfigurationExpression MapUnplannedExpense(IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<UnplannedExpenseDto, UnplannedExpense>();
+            cfg.CreateMap<UnplannedExpenseDto, UnplannedExpense>().ReverseMap();
 
             return cfg;
         }

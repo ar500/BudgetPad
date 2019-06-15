@@ -4,14 +4,16 @@ using BudgetPad.Server.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BudgetPad.Server.Migrations
 {
     [DbContext(typeof(BudgetPadContext))]
-    partial class BudgetPadContextModelSnapshot : ModelSnapshot
+    [Migration("20190615225212_removed_payments_from_expense_base_added_payment_UnplannedExpenses")]
+    partial class removed_payments_from_expense_base_added_payment_UnplannedExpenses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

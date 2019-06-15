@@ -6,7 +6,7 @@ namespace BudgetPad.Server.CoreServices.Expense
 {
     public interface IExpenseLoggerService
     {
-        Task<ExpenseLogEntry> LogExpense<T>(T expense, string remarks = null) where T : ExpenseBase;
+        Task<ExpenseLogEntry> LogExpense(Bill expense, string remarks = null);
 
         Task<ExpenseLogEntry> DeleteExpenseLog(Guid paymentId);
 

@@ -11,8 +11,6 @@ namespace BudgetPad.Shared
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
-        public IList<Payment> Payments { get; set; } = new List<Payment>();
-
         public Guid? BudgetId { get; set; }
 
         [Required]

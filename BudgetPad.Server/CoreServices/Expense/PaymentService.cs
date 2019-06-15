@@ -22,7 +22,7 @@ namespace BudgetPad.Server.CoreServices.Expense
         }
 
 
-        public async Task<Payment> AddPaymentAsync<T>(T expense, Payment payment, string remarks = null) where T : ExpenseBase
+        public async Task<Payment> AddPaymentAsync(Bill expense, Payment payment, string remarks = null)
         {
             try
             {

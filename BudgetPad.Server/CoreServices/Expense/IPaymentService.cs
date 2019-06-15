@@ -6,7 +6,7 @@ namespace BudgetPad.Server.CoreServices.Expense
 {
     public interface IPaymentService
     {
-        Task<Payment> AddPaymentAsync<T>(T expense, Payment payment, string remarks = null) where T : ExpenseBase;
+        Task<Payment> AddPaymentAsync(Bill expense, Payment payment, string remarks = null);
 
         Task DeletePaymentAsync(Guid id);
 

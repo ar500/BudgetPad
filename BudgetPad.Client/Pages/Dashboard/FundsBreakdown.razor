@@ -1,0 +1,92 @@
+﻿@using BudgetPad.Shared.Dtos.DtoExtensions
+@inject HttpClient Http
+
+<div class="card">
+    <div class="card-header">
+        <span class="text-muted text-sm-left align-text-bottom">Funds</span>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card-img-top" style="background-color: darkslategrey;">
+                    <span>Chart area</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-muted text-uppercase">Planned</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-dark">Income:</span>
+                        </div>
+                        <div class="col-md text-dark">
+                            <span class="card-text">@Budget.AllottedFunds.ToString("C")</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-dark">Funds Allocated:</span>
+                        </div>
+                        <div class="col-md text-dark">
+                            <span class="card-text">@Budget.AllocatedFunds.ToString("C")</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-dark">Funds Remaining:</span>
+                        </div>
+                        <div class="col-md text-dark">
+                            <span class="card-text">@Budget.UnallocatedFunds.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-muted text-uppercase">Spent</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-dark">Planned:</span>
+                        </div>
+                        <div class="col-md text-dark">
+                            <span class="card-text">@Budget.TotalSpentInBills.ToString("C")</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md">
+                            <span class="card-text text-dark">Unplanned:</span>
+                        </div>
+                        <div class="col-md text-dark">
+                            <span class="card-text">@Budget.AllocatedFunds.ToString("C")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+
+    [Parameter]
+    private BudgetDtoExtension Budget { get; set; }
+
+    protected override async Task OnInitAsync()
+    {
+    }
+}
