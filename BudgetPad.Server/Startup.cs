@@ -37,6 +37,7 @@ namespace BudgetPad.Server
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IExpenseRepositry, ExpenseRepository>();
             services.AddScoped<IBudgetRepository, BudgetRepository>();
+            services.AddScoped<IUnplannedExpenseRepository, UnplannedExpenseRepository>();
 
             services.AddSingleton<IMapperService, MapperService>();
             services.AddSingleton<ICalculateBudgetFundsService, CalculateBudgetFundsService>();

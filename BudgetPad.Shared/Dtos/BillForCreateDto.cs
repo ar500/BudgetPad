@@ -7,12 +7,6 @@ namespace BudgetPad.Shared.Dtos
     {
         public Guid Id { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime DatePaid { get; set; }
-
-        [DataType(DataType.Currency)]
-        public decimal AmountSpent { get; set; }
-
         [Required]
         public string CategoryName { get; set; }
 

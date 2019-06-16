@@ -20,7 +20,7 @@ namespace BudgetPad.Server.CoreServices.Expense
             _logger = logger;
         }
 
-        public async Task<ExpenseLogEntry> LogExpense(Bill expense, string remarks = null)
+        public async Task<ExpenseLogEntry> LogBill(Bill expense, string remarks = null)
         {
             var paymentToLog = expense.Payments
                 .OrderByDescending(e => e.EntryDateTime)
@@ -42,7 +42,23 @@ namespace BudgetPad.Server.CoreServices.Expense
                 logEntry.Remarks = remarks;
             }
 
-            _logger.LogInformation("A new expense payment was logged.");
+            _logger.LogInformation("A new bill payment was logged.");
+
+            await _expenseRepositry.Create(logEntry);
+
+            return logEntry;
+        }
+
+        public async Task<ExpenseLogEntry> LogUnplannedExpense(UnplannedExpense expense)
+        {
+            var logEntry = new ExpenseLogEntry
+            {
+                Payment = expense.Payment,
+                ExpenseId = expense.Id,
+                Remarks = expense.Remarks
+            };
+
+            _logger.LogInformation("An unexpected expense payment was logged.");
 
             await _expenseRepositry.Create(logEntry);
 

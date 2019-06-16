@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace BudgetPad.Shared.Dtos
 {
-    public class UnplannedExpenseDto
+    public class UnplannedExpenseForCreateDto
     {
         public Guid Id { get; set; }
 
@@ -13,11 +14,13 @@ namespace BudgetPad.Shared.Dtos
         public string Remarks { get; set; }
 
         [Required]
-        public PaymentDto Payment { get; set; }
-
-        public Guid? BudgetId { get; set; }
+        public PaymentForCreateDto Payment { get; set; }
 
         [Required]
+        public string CategoryName { get; set; }
+
         public BudgetCategoryDto BudgetCategory { get; set; }
+
+        public Guid? BudgetId { get; set; }
     }
 }

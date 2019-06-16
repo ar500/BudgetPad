@@ -1,4 +1,5 @@
 ﻿using BudgetPad.Shared.Services.BudgetFunds;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +12,11 @@ namespace BudgetPad.Shared.Dtos.DtoExtensions
         public decimal TotalSpentInBills
         {
             get => CalculateTotalSpentBills();
+        }
+
+        public decimal TotalSpentInUnplannedExpenses
+        {
+            get => CalculateTotalSpentUnplannedExpenses();
         }
 
         public decimal AllocatedFunds
@@ -55,6 +61,11 @@ namespace BudgetPad.Shared.Dtos.DtoExtensions
             return (from p in this.Bills
                     from s in p.Payments
                     select s.AmountPaid).Sum();
+        }
+
+        private decimal CalculateTotalSpentUnplannedExpenses()
+        {
+            return base.UnplannedExpenses.Select(e => e.Payment.AmountPaid).Sum();
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace BudgetPad.Shared
 {
-    public class UnplannedExpense : ExpenseBase
+    public class UnplannedExpense : ExpenseBase, IEntity
     {
         [Required]
         [MaxLength(200)]

@@ -22,7 +22,7 @@ namespace BudgetPad.Server.CoreServices.Expense
         }
 
 
-        public async Task<Payment> AddPaymentAsync(Bill expense, Payment payment, string remarks = null)
+        public async Task<Payment> AddBillPaymentAsync(Bill expense, Payment payment, string remarks = null)
         {
             try
             {
@@ -34,9 +34,16 @@ namespace BudgetPad.Server.CoreServices.Expense
                 return null;
             }
 
-            await _expenseLoggerService.LogExpense(expense, remarks);
+            await _expenseLoggerService.LogBill(expense, remarks);
 
             return payment;
+        }
+
+        public async Task<Payment> AddUnplannedExpensePaymentAsync(UnplannedExpense expense)
+        {
+            await _expenseLoggerService.LogUnplannedExpense(expense);
+
+            return expense.Payment;
         }
 
         public async Task DeletePaymentAsync(Guid id)

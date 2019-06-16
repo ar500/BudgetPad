@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace BudgetPad.Server.DataAccess.Repositories
 {
-    public class PaymentRepository : GenericRepository<Payment>, IPaymentRepository
+    public class UnplannedExpenseRepository : GenericRepository<UnplannedExpense>, IUnplannedExpenseRepository
     {
-        public PaymentRepository(BudgetPadContext context, ILogger<PaymentRepository> logger)
+        public UnplannedExpenseRepository(BudgetPadContext context, ILogger<UnplannedExpenseRepository> logger)
             : base(context, logger)
         {
         }

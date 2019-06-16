@@ -33,7 +33,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md">
-                            <span class="card-text text-dark">Funds Allocated:</span>
+                            <span class="card-text text-dark">Allocated:</span>
                         </div>
                         <div class="col-md text-dark">
                             <span class="card-text">@Budget.AllocatedFunds.ToString("C")</span>
@@ -41,7 +41,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md">
-                            <span class="card-text text-dark">Funds Remaining:</span>
+                            <span class="card-text text-dark">Remaining:</span>
                         </div>
                         <div class="col-md text-dark">
                             <span class="card-text">@Budget.UnallocatedFunds.ToString("C")</span>
@@ -56,7 +56,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md">
-                            <span class="card-text text-muted text-uppercase">Spent</span>
+                            <span class="card-text text-muted text-uppercase">Spent (as of @DateTime.Now.ToShortDateString())</span>
                         </div>
                     </div>
                     <div class="row">
@@ -72,7 +72,7 @@
                             <span class="card-text text-dark">Unplanned:</span>
                         </div>
                         <div class="col-md text-dark">
-                            <span class="card-text">@Budget.AllocatedFunds.ToString("C")</span>
+                            <span class="card-text">@Budget.TotalSpentInUnplannedExpenses.ToString("C")</span>
                         </div>
                     </div>
                 </div>

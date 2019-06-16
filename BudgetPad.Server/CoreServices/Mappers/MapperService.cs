@@ -56,6 +56,9 @@ namespace BudgetPad.Server.CoreServices.Mappers
             cfg.CreateMap<UnplannedExpenseDto, UnplannedExpense>();
             cfg.CreateMap<UnplannedExpenseDto, UnplannedExpense>().ReverseMap();
 
+            cfg.CreateMap<UnplannedExpenseForCreateDto, UnplannedExpense>();
+            cfg.CreateMap<UnplannedExpenseForCreateDto, UnplannedExpense>().ReverseMap();
+
             return cfg;
         }
 

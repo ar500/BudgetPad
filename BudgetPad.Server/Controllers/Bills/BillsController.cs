@@ -131,17 +131,14 @@ namespace BudgetPad.Server.Controllers.Bills
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBill(Guid id)
         {
-            var bill = await _billRepository.GetById(id, true);
-            if (bill == null)
+            if(!await _billRepository.EntryExists(id))
             {
                 return NotFound();
             }
 
             await _billRepository.Delete(id);
 
-            var billToReturn = Mapper.Map<BillDto>(bill);
-
-            return Ok(billToReturn);
+            return NoContent();
         }
 
         // GET: api/Bills/GetPayments/billId
@@ -188,7 +185,7 @@ namespace BudgetPad.Server.Controllers.Bills
 
             var paymentToAdd = Mapper.Map<Payment>(payment);
 
-            await _paymentService.AddPaymentAsync(billFromRepo, paymentToAdd);
+            await _paymentService.AddBillPaymentAsync(billFromRepo, paymentToAdd);
 
             await _billRepository.Update(billId, billFromRepo);
 

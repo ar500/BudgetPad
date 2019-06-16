@@ -1,0 +1,89 @@
+﻿@using BudgetPad.Shared.Dtos
+@using BudgetPad.Client.Pages.BudgetCategories
+@inject IModalService Modal
+@inject HttpClient Http
+
+@if (budgetCategories == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="@expense" OnValidSubmit="@HandleValidSubmit" Context="EditFormContext">
+        <DataAnnotationsValidator />
+        <DxFormLayout>
+
+            <DxFormLayoutItem Caption="Category" ColSpanMd="6">
+                <Template>
+                    <DxComboBox Data=@budgetCategories.Select(c => c.ShortName)
+                                NullText="Select a category..."
+                                bind-SelectedItem=@expense.CategoryName>
+                    </DxComboBox>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Description" ColSpanMd="6">
+                <Template>
+                    <DxTextBox bind-Text=@expense.Remarks></DxTextBox>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Amount" ColSpanMd="6">
+                <Template>
+                    <DxSpinEdit bind-Value=@expense.Payment.AmountPaid></DxSpinEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem Caption="Date Paid" ColSpanMd="6">
+                <Template>
+                    <DxDateEdit bind-Date=@expense.Payment.DatePaid></DxDateEdit>
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <ValidationSummary />
+                </Template>
+            </DxFormLayoutItem>
+
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <button type="submit">Save</button>
+                    <button type="button" onclick=@Cancel>Cancel</button>
+                </Template>
+            </DxFormLayoutItem>
+
+        </DxFormLayout>
+    </EditForm>
+}
+
+
+@functions {
+
+    [CascadingParameter]
+    private ModalParameters Parameters { get; set; }
+
+    private UnplannedExpenseForCreateDto expense = new UnplannedExpenseForCreateDto();
+
+    private BudgetCategoryDto[] budgetCategories { get; set; }
+
+    protected override async Task OnInitAsync()
+    {
+        budgetCategories = await Http.GetJsonAsync<BudgetCategoryDto[]>("api/BudgetCategories/GetCategories");
+
+        expense.BudgetId = Parameters.Get<Guid>("budgetId");
+        expense.Payment = new PaymentForCreateDto();
+        expense.Payment.DatePaid = DateTime.Now;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await Http.SendJsonAsync(HttpMethod.Post, "api/unplannedexpenses", expense);
+        Modal.Close(ModalResult.Ok($"A payment in the category {expense.CategoryName} of {expense.Payment.AmountPaid} was logged sucessfully!"));
+    }
+
+    private void Cancel()
+    {
+        Modal.Close(ModalResult.Cancel());
+    }
+}
